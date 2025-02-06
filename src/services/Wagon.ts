@@ -34,7 +34,7 @@ export class Wagon {
   }
 
   private static get apiKey(): string {
-    return "pist";
+    return "ptra";
   }
 
   private static positionFromDTO(positionDto: any): Position {
