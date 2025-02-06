@@ -80,21 +80,21 @@ watch(
 
 <style scoped>
 .preview :deep(svg) {
-  height: 10vh;
+  height: 12vh;
   width: auto;
+  border-radius: 0.8vh;
 }
 
 .screens label {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5vh;
+  position: relative;
+  display: inline-block;
   margin-right: 1vh;
 }
 
 .screens input[type="radio"] {
-  margin-top: 0;
-  margin-inline-end: 0;
+  position: absolute;
+  left: 1vh;
+  bottom: 1vh;
 }
 
 article {
