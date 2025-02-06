@@ -32,7 +32,7 @@ const LEON_GP_V2_SCREEN = {
     type: string,
     name: string,
     svgPreview: string,
-    commercialName?: string = undefined
+    commercialName?: string
   ): Screen {
     return {
       name,
