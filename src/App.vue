@@ -1,38 +1,29 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import { screens, type Screen } from "./screens";
 import Selector from "./components/Selector.vue";
+import { screens, type Screen, type StopAndMaybeRoute } from "./screens";
 
 const selectedScreen = ref<Screen | null>(null);
 
-const selectedScreenParams = ref<Record<string, string>>({});
-
-const urlParams = computed<URLSearchParams>(() => {
-  const params = new URLSearchParams();
-  for (const [key, value] of Object.entries(selectedScreenParams.value)) {
-    params.set(key, value);
-  }
-  return params;
-});
+const selectedScreenParams = ref<Map<number, StopAndMaybeRoute>>(new Map());
 
 const url = computed<string>(() => {
-  return selectedScreen.value?.url(urlParams.value) ?? "";
+  const valuesOrdered = Array.from(selectedScreenParams.value.entries())
+    .sort(([a], [b]) => a - b)
+    .map(([, value]) => value);
+  return selectedScreen.value?.url(valuesOrdered) ?? "";
 });
 
 const allParamsSelected = computed<boolean>(() => {
   return (
-    selectedScreen.value?.selectors.reduce(
-      (total, selector) =>
-        total + (selector.params.routeValue === undefined ? 1 : 2),
-      0
-    ) === Object.keys(selectedScreenParams.value).length
+    selectedScreenParams.value.size === selectedScreen.value?.selectors.length
   );
 });
 
 watch(
   () => selectedScreen.value,
   () => {
-    selectedScreenParams.value = {};
+    selectedScreenParams.value = new Map();
   }
 );
 </script>
@@ -68,12 +59,13 @@ watch(
       <hr v-if="i > 0" />
       <Selector
         :label="selector.label"
-        :params="selector.params"
-        v-model="selectedScreenParams"
+        :selector-type="selector.selection"
+        :stop-route="selectedScreenParams.get(i)"
+        @update:stop-route="($event) => selectedScreenParams.set(i, $event)"
       ></Selector>
     </template>
   </article>
-  <section v-if="Object.entries(selectedScreenParams).length > 0">
+  <section>
     <p>
       <a :disabled="!allParamsSelected" role="button" :href="url"
         >Ouvrir dans cet onglet</a

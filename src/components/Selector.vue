@@ -1,17 +1,17 @@
 <script lang="ts" setup>
 import { watchDebounced } from "@vueuse/core";
 import { ref, watch } from "vue";
-import type { ScreenParams } from "../screens";
 import { Wagon, type SimpleLine, type SimpleStop } from "../services/Wagon";
+import type { SelectorType, StopAndMaybeRoute } from "../screens";
 
-const props = defineProps<{
+defineProps<{
   label: string;
-  params: ScreenParams;
-  modelValue: Record<string, string>;
+  selectorType: SelectorType;
+  stopRoute: StopAndMaybeRoute | undefined;
 }>();
 
 const emit = defineEmits<{
-  (e: "update:modelValue", value: Record<string, string>): void;
+  (e: "update:stopRoute", value: StopAndMaybeRoute): void;
 }>();
 
 const searchTerms = ref<string>("");
@@ -49,11 +49,7 @@ watch(
   () => selectedStopId.value,
   (value) => {
     const stop = getStop(value);
-    const param = props.params.stopValue(stop);
-    emit("update:modelValue", {
-      ...props.modelValue,
-      [param.name]: param.value,
-    });
+    emit("update:stopRoute", { stop, route: undefined });
   }
 );
 
@@ -62,14 +58,8 @@ watch(
   (value) => {
     const [lineId, stopId] = value.split(" ");
     const stop = getStop(stopId);
-    const line = getRoute(lineId, stop);
-    const lineParam = props.params.routeValue!(line);
-    const stopParam = props.params.stopValue(stop);
-    emit("update:modelValue", {
-      ...props.modelValue,
-      [lineParam.name]: lineParam.value,
-      [stopParam.name]: stopParam.value,
-    });
+    const route = getRoute(lineId, stop);
+    emit("update:stopRoute", { stop, route });
   }
 );
 </script>
@@ -83,7 +73,7 @@ watch(
     <li v-for="stop in stops">
       <label>
         <input
-          v-if="params.routeValue === undefined"
+          v-if="selectorType === 'STOP'"
           type="radio"
           :name="uuid"
           v-model="selectedStopId"
@@ -96,7 +86,7 @@ watch(
           v-html="mode"
         ></div>
       </label>
-      <div v-if="params.routeValue !== undefined">
+      <div v-if="selectorType === 'STOP_AND_ROUTE'">
         <label class="picto" v-for="line in stop.lines">
           <div class="lineShape" v-html="line.numberShapeSvg"></div>
           <input
