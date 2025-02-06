@@ -14,11 +14,9 @@ const url = computed<string>(() => {
   return selectedScreen.value?.url(valuesOrdered) ?? "";
 });
 
-const allParamsSelected = computed<boolean>(() => {
-  return (
-    selectedScreenParams.value.size === selectedScreen.value?.selectors.length
-  );
-});
+const allParamsSelected = computed<boolean>(
+  () => url.value.length > 0 && url.value.includes("undefined") === false
+);
 
 watch(
   () => selectedScreen.value,
@@ -67,11 +65,14 @@ watch(
   </article>
   <section>
     <p>
-      <a :disabled="!allParamsSelected" role="button" :href="url"
+      <a
+        :disabled="allParamsSelected ? undefined : true"
+        role="button"
+        :href="url"
         >Ouvrir dans cet onglet</a
       >
     </p>
-    <p>
+    <p v-if="allParamsSelected">
       <code>{{ url }}</code>
     </p>
   </section>
