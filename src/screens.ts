@@ -18,7 +18,7 @@ export type Selector = {
 export type Screen = {
   name: string;
   commercialName?: string;
-  url: string;
+  url: (params: URLSearchParams) => string;
   selectors: Selector[];
   svgPreview: string;
 };
@@ -27,7 +27,7 @@ export const screens: Record<string, Screen> = {
   PANAM: {
     name: "Prochains départs métro",
     commercialName: "PANAM",
-    url: "https://panam.arno.cl/",
+    url: (params) => "https://panam.arno.cl/?" + params.toString(),
     selectors: [
       {
         label: "Station de départ",
@@ -51,7 +51,7 @@ export const screens: Record<string, Screen> = {
   SYSPAD: {
     name: "Prochain départ RER",
     commercialName: "Syspad",
-    url: "https://syspad.arno.cl/",
+    url: (params) => "https://syspad.arno.cl/?" + params.toString(),
     selectors: [
       {
         label: "Station de départ",
