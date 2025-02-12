@@ -18,6 +18,14 @@ const allParamsSelected = computed<boolean>(
   () => url.value.length > 0 && url.value.includes("undefined") === false
 );
 
+const sendScreenEvent = () => {
+  const params:StopAndMaybeRoute[] = Array.from(selectedScreenParams.value.values())
+  const linesNames = params.map((v: StopAndMaybeRoute) => v.route?.number ?? "Aucune lignes");
+  const stopsNames = params.map((v: StopAndMaybeRoute) => v.stop.name);
+  // @ts-ignore
+  dataLayer.push({'event': 'screen_opened', 'screen': selectedScreen.value.name, 'url': url.value, 'lines': linesNames, 'stops': stopsNames});
+};
+
 watch(
   () => selectedScreen.value,
   () => {
@@ -66,9 +74,9 @@ watch(
   <section>
     <p>
       <a
-        :disabled="allParamsSelected ? undefined : true"
+        @click="sendScreenEvent"
         role="button"
-        :href="url"
+        id="open-screen"
         >Ouvrir dans cet onglet</a
       >
     </p>
