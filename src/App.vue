@@ -74,6 +74,8 @@ watch(
   <section>
     <p>
       <a
+      :disabled="allParamsSelected ? undefined : true"
+      :href="url"
         @click="sendScreenEvent"
         role="button"
         id="open-screen"
