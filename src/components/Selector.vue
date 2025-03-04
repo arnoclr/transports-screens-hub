@@ -6,6 +6,7 @@ import type { SelectorType, StopAndMaybeRoute } from "../screens";
 
 defineProps<{
   label: string;
+  hint?: string;
   selectorType: SelectorType;
   stopRoute: StopAndMaybeRoute | undefined;
 }>();
@@ -68,6 +69,7 @@ watch(
   <label>
     <span :aria-busy="isLoading">{{ label }}</span>
     <input type="text" v-model="searchTerms" spellcheck="false" />
+    <small v-if="hint"><br />{{ hint }}</small>
   </label>
   <ul>
     <li v-for="stop in stops">

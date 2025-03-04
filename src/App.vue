@@ -19,11 +19,21 @@ const allParamsSelected = computed<boolean>(
 );
 
 const sendScreenEvent = () => {
-  const params:StopAndMaybeRoute[] = Array.from(selectedScreenParams.value.values())
-  const linesNames = params.map((v: StopAndMaybeRoute) => v.route?.number ?? "Aucune lignes");
+  const params: StopAndMaybeRoute[] = Array.from(
+    selectedScreenParams.value.values()
+  );
+  const linesNames = params.map(
+    (v: StopAndMaybeRoute) => v.route?.number ?? "Aucune lignes"
+  );
   const stopsNames = params.map((v: StopAndMaybeRoute) => v.stop.name);
   // @ts-ignore
-  dataLayer.push({'event': 'screen_opened', 'screen': selectedScreen.value.name, 'url': url.value, 'lines': linesNames, 'stops': stopsNames});
+  dataLayer.push({
+    event: "screen_opened",
+    screen: selectedScreen.value.name,
+    url: url.value,
+    lines: linesNames,
+    stops: stopsNames,
+  });
 };
 
 watch(
@@ -65,6 +75,7 @@ watch(
       <hr v-if="i > 0" />
       <Selector
         :label="selector.label"
+        :hint="selector.hint"
         :selector-type="selector.selection"
         :stop-route="selectedScreenParams.get(i)"
         @update:stop-route="($event) => selectedScreenParams.set(i, $event)"
@@ -74,8 +85,8 @@ watch(
   <section>
     <p>
       <a
-      :disabled="allParamsSelected ? undefined : true"
-      :href="url"
+        :disabled="allParamsSelected ? undefined : true"
+        :href="url"
         @click="sendScreenEvent"
         role="button"
         id="open-screen"

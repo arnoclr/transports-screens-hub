@@ -163,15 +163,15 @@ export const screens: Record<string, Screen> = {
         // hint: "Laisser vide pour afficher les départs dans toutes les directions",
         hint: "Choisir la même station pour afficher les départs dans toutes les directions",
       },
-      {
-        label: "Gestion des trains courts",
-        selection: "SELECT",
-        options: [
-          { label: "Ne rien afficher", value: "none" },
-          { label: "Indiquer de se déplacer vers la droite", value: "right" },
-          { label: "Indiquer de se déplacer vers la gauche", value: "left" },
-        ],
-      },
+      // {
+      //   label: "Gestion des trains courts",
+      //   selection: "SELECT",
+      //   options: [
+      //     { label: "Ne rien afficher", value: "none" },
+      //     { label: "Indiquer de se déplacer vers la droite", value: "right" },
+      //     { label: "Indiquer de se déplacer vers la gauche", value: "left" },
+      //   ],
+      // },
     ],
     svgPreview: SYSPAD_SVG,
   },
