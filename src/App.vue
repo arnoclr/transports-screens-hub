@@ -11,7 +11,7 @@ const url = computed<string>(() => {
   const valuesOrdered = Array.from(selectedScreenParams.value.entries())
     .sort(([a], [b]) => a - b)
     .map(([, value]) => value);
-  return selectedScreen.value?.url(valuesOrdered) ?? "";
+  return selectedScreen.value?.url(valuesOrdered, []) ?? "";
 });
 
 const allParamsSelected = computed<boolean>(
@@ -29,7 +29,7 @@ const sendScreenEvent = () => {
   // @ts-ignore
   dataLayer.push({
     event: "screen_opened",
-    screen: selectedScreen.value.name,
+    screen: selectedScreen.value?.name,
     url: url.value,
     lines: linesNames,
     stops: stopsNames,

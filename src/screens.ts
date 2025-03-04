@@ -22,6 +22,7 @@ export type SelectorBase = {
 
 export type SelectSelector = {
   label: string;
+  hint?: string;
   selection: "SELECT";
   options: { label: string; value: string }[];
 };
@@ -137,16 +138,21 @@ export const screens: Record<string, Screen> = {
   SYSPAD: {
     name: "Prochain départ RER",
     commercialName: "Syspad",
-    url: (stops, options) => {
+    url: (stops) => {
       const url =
         "https://utilisez-wagon-pour-vos-deplacements-du-quotidien.syspad.arno.cl/";
 
       const isTerminus = stops.at(0)?.stop.id === stops.at(1)?.stop.id;
+      const terminusPosition = stops.at(1)?.stop.position;
 
       const urlParams = new URLSearchParams();
       urlParams.append("from", stops.at(0)?.stop.id || "");
-      urlParams.append("to", stops.at(1)?.stop.id || "");
-      urlParams.append("isTerminus", isTerminus ? "1" : "0");
+      if (!isTerminus) {
+        urlParams.append(
+          "to",
+          `${terminusPosition?.lat},${terminusPosition?.long}`
+        );
+      }
       urlParams.append("shortTrainMessage", "none");
 
       return url + "?" + urlParams.toString();
