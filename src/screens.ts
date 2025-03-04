@@ -7,22 +7,34 @@ import { TRANSILIEN_BOARD_SVG } from "./previews/TRANSILIEN_BOARD.svg";
 import { TRANSILIEN_DETAILED_SVG } from "./previews/TRANSILIEN_DETAILED.svg";
 import type { SimpleLine, SimpleStop } from "./services/Wagon";
 
-export type SelectorType = "STOP" | "STOP_AND_ROUTE";
+export type SelectorType = "STOP" | "STOP_AND_ROUTE" | "SELECT";
 
 export type StopAndMaybeRoute = {
   stop: SimpleStop;
   route: SimpleLine | undefined;
 };
 
-export type Selector = {
+export type SelectorBase = {
   label: string;
-  selection: SelectorType;
+  hint?: string;
+  selection: Exclude<SelectorType, "SELECT">;
 };
+
+export type SelectSelector = {
+  label: string;
+  selection: "SELECT";
+  options: { label: string; value: string }[];
+};
+
+export type Selector = SelectorBase | SelectSelector;
 
 export type Screen = {
   name: string;
   commercialName?: string;
-  url: (selectedValues: StopAndMaybeRoute[]) => string;
+  url: (
+    selectedStations: StopAndMaybeRoute[],
+    selectedValue: string[]
+  ) => string;
   selectors: Selector[];
   svgPreview: string;
 };
@@ -125,8 +137,20 @@ export const screens: Record<string, Screen> = {
   SYSPAD: {
     name: "Prochain départ RER",
     commercialName: "Syspad",
-    url: () =>
-      "https://utilisez-wagon-pour-vos-deplacements-du-quotidien.syspad.arno.cl/",
+    url: (stops, options) => {
+      const url =
+        "https://utilisez-wagon-pour-vos-deplacements-du-quotidien.syspad.arno.cl/";
+
+      const isTerminus = stops.at(0)?.stop.id === stops.at(1)?.stop.id;
+
+      const urlParams = new URLSearchParams();
+      urlParams.append("from", stops.at(0)?.stop.id || "");
+      urlParams.append("to", stops.at(1)?.stop.id || "");
+      urlParams.append("isTerminus", isTerminus ? "1" : "0");
+      urlParams.append("shortTrainMessage", "none");
+
+      return url + "?" + urlParams.toString();
+    },
     selectors: [
       {
         label: "Station de départ",
@@ -135,6 +159,18 @@ export const screens: Record<string, Screen> = {
       {
         label: "Terminus",
         selection: "STOP",
+        // TODO: propriétés optionnelles
+        // hint: "Laisser vide pour afficher les départs dans toutes les directions",
+        hint: "Choisir la même station pour afficher les départs dans toutes les directions",
+      },
+      {
+        label: "Gestion des trains courts",
+        selection: "SELECT",
+        options: [
+          { label: "Ne rien afficher", value: "none" },
+          { label: "Indiquer de se déplacer vers la droite", value: "right" },
+          { label: "Indiquer de se déplacer vers la gauche", value: "left" },
+        ],
       },
     ],
     svgPreview: SYSPAD_SVG,
