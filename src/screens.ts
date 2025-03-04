@@ -147,6 +147,7 @@ export const screens: Record<string, Screen> = {
 
       const urlParams = new URLSearchParams();
       urlParams.append("from", stops.at(0)?.stop.id || "");
+      urlParams.append("route", stops.at(0)?.route?.id || "");
       if (!isTerminus) {
         urlParams.append(
           "to",
