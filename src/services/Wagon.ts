@@ -92,9 +92,11 @@ export class Wagon {
       return this.lineFromDTO(line);
     });
 
-    const stops: SimpleStop[] = json.data.stops.map((stop: any) => {
-      return this.stopFromDTO(stop, lines);
-    });
+    const stops: SimpleStop[] = json.data.stops
+      .filter((stop: any) => stop.averagePosition !== undefined)
+      .map((stop: any) => {
+        return this.stopFromDTO(stop, lines);
+      });
 
     return stops;
   }
