@@ -51,13 +51,18 @@ watch(
       <p>{{ Object.values(screens).length }} écrans disponibles</p>
     </hgroup>
     <label v-for="[id, screen] in Object.entries(screens)" :key="id">
-      <div class="preview" v-html="screen.svgPreview"></div>
+      <div
+        class="preview"
+        :class="{ beta: screen.beta }"
+        v-html="screen.svgPreview"
+      ></div>
       <input
         type="radio"
         name="screen"
         :value="screen"
         v-model="selectedScreen"
       />
+      <span v-if="screen.beta" class="beta">Beta</span>
     </label>
   </section>
   <article>
@@ -108,6 +113,10 @@ watch(
   border-radius: 0.8vh;
 }
 
+.preview.beta :deep(svg) {
+  filter: grayscale(100%);
+}
+
 .screens label {
   position: relative;
   display: inline-block;
@@ -118,6 +127,16 @@ watch(
   position: absolute;
   left: 1vh;
   bottom: 1vh;
+}
+
+.screens span.beta {
+  position: absolute;
+  top: 1vh;
+  right: 1vh;
+  background-color: darkslategray;
+  color: white;
+  padding: 0.2vh 0.5vh;
+  border-radius: 0.5vh;
 }
 
 article {

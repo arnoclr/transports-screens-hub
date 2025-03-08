@@ -1,5 +1,6 @@
 import { PANAM_SVG } from "./previews/PANAM.svg";
 import { RATP_BUS_SVG } from "./previews/RATP_BUS.svg";
+import { RATP_GLOBAL_DISRUPTIONS_SVG } from "./previews/RATP_GLOBAL_DISRUPTIONS.svg";
 import { RATP_MULTIMODE_SVG } from "./previews/RATP_MULTIMODE.svg";
 import { RER_RATP_BOARD_SVG } from "./previews/RER_RATP_BOARD.svg";
 import { SYSPAD_SVG } from "./previews/SYSPAD.svg";
@@ -38,6 +39,7 @@ export type Screen = {
   ) => string;
   selectors: Selector[];
   svgPreview: string;
+  beta?: true;
 };
 
 const LEON_GP_V2_SCREEN = {
@@ -45,12 +47,14 @@ const LEON_GP_V2_SCREEN = {
     type: string,
     name: string,
     svgPreview: string,
-    commercialName?: string
+    commercialName?: string,
+    beta?: true
   ): Screen {
     return {
       name,
       commercialName,
       svgPreview,
+      beta,
       url: (params) => {
         return `https://v2.ecrans.leon.gp/screen/${type}/stop/${
           params.at(0)?.stop.id
@@ -69,6 +73,13 @@ const LEON_GP_V2_SCREEN = {
 };
 
 export const screens: Record<string, Screen> = {
+  RATP_GLOBAL_DISRUPTIONS: LEON_GP_V2_SCREEN.construct(
+    "ratp_trafic",
+    "Info trafic générale — RATP",
+    RATP_GLOBAL_DISRUPTIONS_SVG,
+    undefined,
+    true
+  ),
   BUS_RATP_BASIC: LEON_GP_V2_SCREEN.construct(
     "ratp_bus",
     "Prochains départs BUS — RATP",
