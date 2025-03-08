@@ -1,3 +1,7 @@
 :root {
     --pico-font-family: Arial Rounded MT Bold, sans-serif;
 }
+
+body {
+    background-color: beige;
+}
