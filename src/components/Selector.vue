@@ -46,6 +46,33 @@ function lineModeSvgs(stop: SimpleStop): Set<string> {
   );
 }
 
+function linesByMode(lines: SimpleLine[]): {
+  picto: string;
+  lines: SimpleLine[];
+}[] {
+  const modes = new Map<string, SimpleLine[]>();
+
+  for (const line of lines) {
+    const mode = line.pictoSvg;
+    if (mode === undefined) {
+      continue;
+    }
+    if (!modes.has(mode)) {
+      modes.set(mode, []);
+    }
+    modes.get(mode)?.push(line);
+  }
+
+  return Array.from(modes.entries())
+    .sort(
+      (a, b) => (a[1].at(0)?.importance ?? 0) - (b[1].at(0)?.importance ?? 0)
+    )
+    .map(([picto, lines]) => ({
+      picto,
+      lines,
+    }));
+}
+
 watch(
   () => selectedStopId.value,
   (value) => {
@@ -83,21 +110,27 @@ watch(
         />
         <span>{{ stop.name }}</span>
         <div
+          v-if="selectorType === 'STOP'"
           class="modePicto"
           v-for="mode in lineModeSvgs(stop)"
           v-html="mode"
         ></div>
       </label>
       <div v-if="selectorType === 'STOP_AND_ROUTE'">
-        <label class="picto" v-for="line in stop.lines">
-          <div class="lineShape" v-html="line.numberShapeSvg"></div>
-          <input
-            type="radio"
-            :name="uuid"
-            :value="line.id + ' ' + stop.id"
-            v-model="selectedRouteStopId"
-          />
-        </label>
+        <ul>
+          <li v-for="mode in linesByMode(stop.lines)" :key="mode.picto">
+            <div class="modePictoRow" v-html="mode.picto"></div>
+            <label class="picto" v-for="line in mode.lines" :key="line.id">
+              <div class="lineShape" v-html="line.numberShapeSvg"></div>
+              <input
+                type="radio"
+                :name="uuid"
+                :value="line.id + ' ' + stop.id"
+                v-model="selectedRouteStopId"
+              />
+            </label>
+          </li>
+        </ul>
       </div>
     </li>
   </ul>
@@ -112,6 +145,12 @@ watch(
   display: inline-block;
   height: 2.6vh;
   margin-left: 0.6vh;
+}
+
+.modePictoRow {
+  display: inline-block;
+  height: 4vh;
+  margin-right: 0.6vh;
 }
 
 .picto {
