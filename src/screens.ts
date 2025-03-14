@@ -1,5 +1,7 @@
 import { PANAM_SVG } from "./previews/PANAM.svg";
+import { PANAM_HORIZONTAL_SVG as PANAM_169_SVG } from "./previews/PANAM_HORIZONTAL.svg";
 import { RATP_BUS_SVG } from "./previews/RATP_BUS.svg";
+import { RATP_DEPARTURES_AND_DISRUPTIONS_SVG } from "./previews/RATP_DEPARTURES_AND_DISRUPTIONS.svg";
 import { RATP_GLOBAL_DISRUPTIONS_SVG } from "./previews/RATP_GLOBAL_DISRUPTIONS.svg";
 import { RATP_MULTIMODE_SVG } from "./previews/RATP_MULTIMODE.svg";
 import { RER_RATP_BOARD_SVG } from "./previews/RER_RATP_BOARD.svg";
@@ -73,12 +75,25 @@ const LEON_GP_V2_SCREEN = {
 };
 
 export const screens: Record<string, Screen> = {
+  RATP_DEPARTURES_AND_DISRUPTIONS: LEON_GP_V2_SCREEN.construct(
+    "ratp_gareTrafic",
+    "Départs et Info trafic générale — RATP",
+    RATP_DEPARTURES_AND_DISRUPTIONS_SVG,
+    undefined,
+    true
+  ),
   RATP_GLOBAL_DISRUPTIONS: LEON_GP_V2_SCREEN.construct(
     "ratp_trafic",
     "Info trafic générale — RATP",
     RATP_GLOBAL_DISRUPTIONS_SVG,
     undefined,
     true
+  ),
+  PANAM_169: LEON_GP_V2_SCREEN.construct(
+    "ratp_panam",
+    "Prochains départs métro (type M14)",
+    PANAM_169_SVG,
+    "PANAM"
   ),
   BUS_RATP_BASIC: LEON_GP_V2_SCREEN.construct(
     "ratp_bus",
@@ -126,7 +141,7 @@ export const screens: Record<string, Screen> = {
     svgPreview: TRANSILIEN_DETAILED_SVG,
   },
   PANAM: {
-    name: "Prochains départs métro",
+    name: "Prochains départs métro (type M5)",
     commercialName: "PANAM",
     url: (stops) =>
       `https://panam.arno.cl/?near=${stops.at(0)?.stop.position.lat},${
