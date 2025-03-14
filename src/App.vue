@@ -3,6 +3,7 @@ import { computed, ref, watch } from "vue";
 import Selector from "./components/Selector.vue";
 import Donate from "./components/Donate.vue";
 import { screens, type Screen, type StopAndMaybeRoute } from "./screens";
+import JoinDiscord from "./components/JoinDiscord.vue";
 
 const selectedScreen = ref<Screen | null>(null);
 
@@ -102,7 +103,10 @@ watch(
     <p v-if="allParamsSelected">
       <code>{{ url }}</code>
     </p>
-    <Donate />
+    <div class="links">
+      <JoinDiscord />
+      <Donate />
+    </div>
   </section>
 </template>
 
@@ -144,5 +148,11 @@ article {
   border-radius: 0px;
   padding: 0;
   box-shadow: 0 0 0 32px var(--pico-card-background-color);
+}
+
+.links {
+  display: flex;
+  margin: 5rem 0;
+  gap: 5rem;
 }
 </style>
