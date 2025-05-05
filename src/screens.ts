@@ -87,7 +87,6 @@ export const screens: Record<string, Screen> = {
     "Info trafic générale — RATP",
     RATP_GLOBAL_DISRUPTIONS_SVG,
     undefined,
-    true
   ),
   PANAM_169: LEON_GP_V2_SCREEN.construct(
     "ratp_panam",
@@ -110,7 +109,7 @@ export const screens: Record<string, Screen> = {
     "Prochains départs — RATP",
     RATP_MULTIMODE_SVG
   ),
-  TRANSILIEN_BOARD: {
+ /* TRANSILIEN_BOARD: {
     name: "Prochains départs Transilien",
     commercialName: "IENA",
     url: (stops) =>
@@ -140,6 +139,7 @@ export const screens: Record<string, Screen> = {
     ],
     svgPreview: TRANSILIEN_DETAILED_SVG,
   },
+  */
   PANAM: {
     name: "Prochains départs métro (type M5)",
     commercialName: "PANAM",
