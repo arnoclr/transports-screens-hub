@@ -58,7 +58,7 @@ const LEON_GP_V2_SCREEN = {
       svgPreview,
       beta,
       url: (params) => {
-        return `https://v2.ecrans.leon.gp/screen/${type}/stop/${
+        return `https://departs.leon.gp/screen/${type}/stop/${
           params.at(0)?.stop.id
         }/line/${params.at(0)?.route?.id}/pos/${
           params.at(0)?.stop.position.lat
