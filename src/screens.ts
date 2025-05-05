@@ -6,8 +6,8 @@ import { RATP_GLOBAL_DISRUPTIONS_SVG } from "./previews/RATP_GLOBAL_DISRUPTIONS.
 import { RATP_MULTIMODE_SVG } from "./previews/RATP_MULTIMODE.svg";
 import { RER_RATP_BOARD_SVG } from "./previews/RER_RATP_BOARD.svg";
 import { SYSPAD_SVG } from "./previews/SYSPAD.svg";
-import { TRANSILIEN_BOARD_SVG } from "./previews/TRANSILIEN_BOARD.svg";
-import { TRANSILIEN_DETAILED_SVG } from "./previews/TRANSILIEN_DETAILED.svg";
+//import { TRANSILIEN_BOARD_SVG } from "./previews/TRANSILIEN_BOARD.svg";
+//import { TRANSILIEN_DETAILED_SVG } from "./previews/TRANSILIEN_DETAILED.svg";
 import type { SimpleLine, SimpleStop } from "./services/Wagon";
 
 export type SelectorType = "STOP" | "STOP_AND_ROUTE" | "SELECT";
