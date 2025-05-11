@@ -86,7 +86,7 @@ export const screens: Record<string, Screen> = {
     "ratp_trafic",
     "Info trafic générale — RATP",
     RATP_GLOBAL_DISRUPTIONS_SVG,
-    undefined,
+    undefined
   ),
   PANAM_169: LEON_GP_V2_SCREEN.construct(
     "ratp_panam",
@@ -109,7 +109,7 @@ export const screens: Record<string, Screen> = {
     "Prochains départs — RATP",
     RATP_MULTIMODE_SVG
   ),
- /* TRANSILIEN_BOARD: {
+  /* TRANSILIEN_BOARD: {
     name: "Prochains départs Transilien",
     commercialName: "IENA",
     url: (stops) =>
@@ -172,8 +172,14 @@ export const screens: Record<string, Screen> = {
       const terminusPosition = stops.at(1)?.stop.position;
 
       const urlParams = new URLSearchParams();
-      urlParams.append("from", stops.at(0)?.stop.id || "");
-      urlParams.append("route", stops.at(0)?.route?.id || "");
+      urlParams.append(
+        "from",
+        stops.at(0)?.stop.id.replace("fr-idf:", "stop_area:") || ""
+      );
+      urlParams.append(
+        "route",
+        stops.at(0)?.route?.id.replace("fr-idf:", "line:") || ""
+      );
       if (!isTerminus) {
         urlParams.append(
           "to",
