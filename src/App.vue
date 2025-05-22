@@ -2,12 +2,12 @@
 import { computed, ref, watch } from "vue";
 import Selector from "./components/Selector.vue";
 import Donate from "./components/Donate.vue";
-import { screens, type Screen, type StopAndMaybeRoute } from "./screens";
+import { screens, type Screen, type StopAndMaybeRoutes } from "./screens";
 import JoinDiscord from "./components/JoinDiscord.vue";
 
 const selectedScreen = ref<Screen | null>(null);
 
-const selectedScreenParams = ref<Map<number, StopAndMaybeRoute>>(new Map());
+const selectedScreenParams = ref<Map<number, StopAndMaybeRoutes>>(new Map());
 
 const url = computed<string>(() => {
   const valuesOrdered = Array.from(selectedScreenParams.value.entries())
@@ -21,13 +21,13 @@ const allParamsSelected = computed<boolean>(
 );
 
 const sendScreenEvent = () => {
-  const params: StopAndMaybeRoute[] = Array.from(
+  const params: StopAndMaybeRoutes[] = Array.from(
     selectedScreenParams.value.values()
   );
   const linesNames = params.map(
-    (v: StopAndMaybeRoute) => v.route?.number ?? "Aucune lignes"
+    (v: StopAndMaybeRoutes) => v.routes.at(0)?.number ?? "Aucune lignes"
   );
-  const stopsNames = params.map((v: StopAndMaybeRoute) => v.stop.name);
+  const stopsNames = params.map((v: StopAndMaybeRoutes) => v.stop.name);
   // @ts-ignore
   dataLayer.push({
     event: "screen_opened",
@@ -85,7 +85,7 @@ watch(
         :hint="selector.hint"
         :selector-type="selector.selection"
         :stop-route="selectedScreenParams.get(i)"
-        @update:stop-route="($event) => selectedScreenParams.set(i, $event)"
+        @update:stop-routes="($event) => selectedScreenParams.set(i, $event)"
       ></Selector>
     </template>
   </article>

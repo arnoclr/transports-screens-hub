@@ -2,23 +2,24 @@
 import { watchDebounced } from "@vueuse/core";
 import { ref, watch } from "vue";
 import { Wagon, type SimpleLine, type SimpleStop } from "../services/Wagon";
-import type { SelectorType, StopAndMaybeRoute } from "../screens";
+import type { SelectorType, StopAndMaybeRoutes } from "../screens";
 
 defineProps<{
   label: string;
   hint?: string;
   selectorType: SelectorType;
-  stopRoute: StopAndMaybeRoute | undefined;
+  stopRoute: StopAndMaybeRoutes | undefined;
 }>();
 
 const emit = defineEmits<{
-  (e: "update:stopRoute", value: StopAndMaybeRoute): void;
+  (e: "update:stopRoutes", value: StopAndMaybeRoutes): void;
 }>();
 
 const searchTerms = ref<string>("");
 const stops = ref<SimpleStop[]>([]);
-const selectedStopId = ref("");
-const selectedRouteStopId = ref("");
+const stopModel = ref("");
+const stopRouteModel = ref("");
+const routesModel = ref<string[]>([]);
 const uuid = crypto.randomUUID();
 const isLoading = ref(false);
 
@@ -74,20 +75,33 @@ function linesByMode(lines: SimpleLine[]): {
 }
 
 watch(
-  () => selectedStopId.value,
+  () => stopModel.value,
   (value) => {
     const stop = getStop(value);
-    emit("update:stopRoute", { stop, route: undefined });
+    emit("update:stopRoutes", { stop, routes: [] });
   }
 );
 
 watch(
-  () => selectedRouteStopId.value,
+  () => stopRouteModel.value,
   (value) => {
-    const [lineId, stopId] = value.split(" ");
+    const [stopId, routeId] = value.split(" ");
     const stop = getStop(stopId);
-    const route = getRoute(lineId, stop);
-    emit("update:stopRoute", { stop, route });
+    const route = getRoute(routeId, stop);
+    emit("update:stopRoutes", { stop, routes: [route] });
+  }
+);
+
+watch(
+  () => routesModel.value,
+  (value) => {
+    const [stopId] = value.at(0)?.split(" ") || [];
+    const stop = getStop(stopId);
+    const routes = value.map((stopIdRouteId: string) => {
+      const [_, routeId] = stopIdRouteId.split(" ");
+      return getRoute(routeId, stop);
+    });
+    emit("update:stopRoutes", { stop, routes });
   }
 );
 </script>
@@ -105,7 +119,7 @@ watch(
           v-if="selectorType === 'STOP'"
           type="radio"
           :name="uuid"
-          v-model="selectedStopId"
+          v-model="stopModel"
           :value="stop.id"
         />
         <span>{{ stop.name }}</span>
@@ -116,17 +130,30 @@ watch(
           v-html="mode"
         ></div>
       </label>
-      <div v-if="selectorType === 'STOP_AND_ROUTE'">
+      <div
+        v-if="
+          selectorType === 'STOP_AND_ROUTE' ||
+          selectorType === 'STOP_AND_ROUTES'
+        "
+      >
         <ul>
           <li v-for="mode in linesByMode(stop.lines)" :key="mode.picto">
             <div class="modePictoRow" v-html="mode.picto"></div>
             <label class="picto" v-for="line in mode.lines" :key="line.id">
               <div class="lineShape" v-html="line.numberShapeSvg"></div>
               <input
+                v-if="selectorType === 'STOP_AND_ROUTE'"
                 type="radio"
                 :name="uuid"
-                :value="line.id + ' ' + stop.id"
-                v-model="selectedRouteStopId"
+                :value="stop.id + ' ' + line.id"
+                v-model="stopRouteModel"
+              />
+              <input
+                v-if="selectorType === 'STOP_AND_ROUTES'"
+                type="checkbox"
+                :name="uuid"
+                :value="stop.id + ' ' + line.id"
+                v-model="routesModel"
               />
             </label>
           </li>

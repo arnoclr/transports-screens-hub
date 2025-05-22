@@ -6,15 +6,18 @@ import { RATP_GLOBAL_DISRUPTIONS_SVG } from "./previews/RATP_GLOBAL_DISRUPTIONS.
 import { RATP_MULTIMODE_SVG } from "./previews/RATP_MULTIMODE.svg";
 import { RER_RATP_BOARD_SVG } from "./previews/RER_RATP_BOARD.svg";
 import { SYSPAD_SVG } from "./previews/SYSPAD.svg";
-//import { TRANSILIEN_BOARD_SVG } from "./previews/TRANSILIEN_BOARD.svg";
-//import { TRANSILIEN_DETAILED_SVG } from "./previews/TRANSILIEN_DETAILED.svg";
+import { TRANSILIEN_BOARD_SVG } from "./previews/TRANSILIEN_BOARD.svg";
 import type { SimpleLine, SimpleStop } from "./services/Wagon";
 
-export type SelectorType = "STOP" | "STOP_AND_ROUTE" | "SELECT";
+export type SelectorType =
+  | "STOP"
+  | "STOP_AND_ROUTE"
+  | "STOP_AND_ROUTES"
+  | "SELECT";
 
-export type StopAndMaybeRoute = {
+export type StopAndMaybeRoutes = {
   stop: SimpleStop;
-  route: SimpleLine | undefined;
+  routes: SimpleLine[];
 };
 
 export type SelectorBase = {
@@ -36,7 +39,7 @@ export type Screen = {
   name: string;
   commercialName?: string;
   url: (
-    selectedStations: StopAndMaybeRoute[],
+    selectedStations: StopAndMaybeRoutes[],
     selectedValue: string[]
   ) => string;
   selectors: Selector[];
@@ -60,7 +63,7 @@ const LEON_GP_V2_SCREEN = {
       url: (params) => {
         return `https://departs.leon.gp/screen/${type}/stop/${
           params.at(0)?.stop.id
-        }/line/${params.at(0)?.route?.id}/pos/${
+        }/line/${params.at(0)?.routes.at(0)?.id}/pos/${
           params.at(0)?.stop.position.lat
         },${params.at(0)?.stop.position.long}`;
       },
@@ -109,22 +112,36 @@ export const screens: Record<string, Screen> = {
     "Prochains départs — RATP",
     RATP_MULTIMODE_SVG
   ),
-  /* TRANSILIEN_BOARD: {
+  TRANSILIEN_BOARD: {
     name: "Prochains départs Transilien",
     commercialName: "IENA",
-    url: (stops) =>
-      `https://ecrans.leon.gp/sncf_transilien_new/${
-        stops.at(0)?.stop.id
-      }/default`,
+    url: (stops) => {
+      const params = new URLSearchParams({
+        coordinates: `${stops.at(0)?.stop?.position.lat},${
+          stops.at(0)?.stop?.position.long
+        }`,
+        stop:
+          stops.at(0)?.stop?.id.replace("fr-idf:", "stop_area:") || "undefined",
+        lines:
+          stops
+            .at(0)
+            ?.routes.map((r) => r.id.replace("fr-idf:", "line:"))
+            .join(",") || "undefined",
+        platforms: [].join(","),
+      });
+      return "http://localhost:5173/?" + params.toString();
+    },
     selectors: [
       {
-        label: "Station",
-        selection: "STOP",
+        label: "Au départ de",
+        selection: "STOP_AND_ROUTES",
+        hint: "Sélectionnez toutes les lignes de train ainsi que leurs bus de substitution",
       },
     ],
     svgPreview: TRANSILIEN_BOARD_SVG,
+    beta: true,
   },
-  TRANSILIEN_DETAILED: {
+  /* TRANSILIEN_DETAILED: {
     name: "Prochain départ Transilien",
     commercialName: "IENA",
     url: (stops) =>
@@ -146,7 +163,7 @@ export const screens: Record<string, Screen> = {
     url: (stops) =>
       `https://panam.arno.cl/?near=${stops.at(0)?.stop.position.lat},${
         stops.at(0)?.stop.position.long
-      }&for=${stops.at(0)?.route?.number}&directionHint=${
+      }&for=${stops.at(0)?.routes.at(0)?.number}&directionHint=${
         stops.at(1)?.stop.name
       }`,
     selectors: [
@@ -178,7 +195,7 @@ export const screens: Record<string, Screen> = {
       );
       urlParams.append(
         "route",
-        stops.at(0)?.route?.id.replace("fr-idf:", "line:") || ""
+        stops.at(0)?.routes.at(0)?.id.replace("fr-idf:", "line:") || ""
       );
       if (!isTerminus) {
         urlParams.append(
