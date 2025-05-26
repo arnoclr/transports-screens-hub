@@ -7,6 +7,7 @@ import { RATP_MULTIMODE_SVG } from "./previews/RATP_MULTIMODE.svg";
 import { RER_RATP_BOARD_SVG } from "./previews/RER_RATP_BOARD.svg";
 import { SYSPAD_SVG } from "./previews/SYSPAD.svg";
 import { TRANSILIEN_BOARD_SVG } from "./previews/TRANSILIEN_BOARD.svg";
+import { TRANSILIEN_DETAILED_SVG } from "./previews/TRANSILIEN_DETAILED.svg";
 import type { SimpleLine, SimpleStop } from "./services/Wagon";
 
 export type SelectorType =
@@ -77,6 +78,33 @@ const LEON_GP_V2_SCREEN = {
   },
 };
 
+const IENA = {
+  buildUrl: (stops: StopAndMaybeRoutes[], rows: number) => {
+    const params = new URLSearchParams({
+      aimedDepartureCount: rows.toString(),
+      coordinates: `${stops.at(0)?.stop?.position.lat},${
+        stops.at(0)?.stop?.position.long
+      }`,
+      stop:
+        stops.at(0)?.stop?.id.replace("fr-idf:", "stop_area:") || "undefined",
+      lines:
+        stops
+          .at(0)
+          ?.routes.map((r) => r.id.replace("fr-idf:", "line:"))
+          .join(",") || "undefined",
+      platforms: [].join(","),
+    });
+    return "https://iena.arno.cl/?" + params.toString();
+  },
+  selectors: [
+    {
+      label: "Au départ de",
+      selection: "STOP_AND_ROUTES",
+      hint: "Sélectionnez toutes les lignes de train ainsi que leurs bus de substitution",
+    },
+  ] as Selector[],
+};
+
 export const screens: Record<string, Screen> = {
   RATP_DEPARTURES_AND_DISRUPTIONS: LEON_GP_V2_SCREEN.construct(
     "ratp_gareTrafic",
@@ -115,48 +143,19 @@ export const screens: Record<string, Screen> = {
   TRANSILIEN_BOARD: {
     name: "Prochains départs Transilien",
     commercialName: "IENA",
-    url: (stops) => {
-      const params = new URLSearchParams({
-        coordinates: `${stops.at(0)?.stop?.position.lat},${
-          stops.at(0)?.stop?.position.long
-        }`,
-        stop:
-          stops.at(0)?.stop?.id.replace("fr-idf:", "stop_area:") || "undefined",
-        lines:
-          stops
-            .at(0)
-            ?.routes.map((r) => r.id.replace("fr-idf:", "line:"))
-            .join(",") || "undefined",
-        platforms: [].join(","),
-      });
-      return "http://localhost:5173/?" + params.toString();
-    },
-    selectors: [
-      {
-        label: "Au départ de",
-        selection: "STOP_AND_ROUTES",
-        hint: "Sélectionnez toutes les lignes de train ainsi que leurs bus de substitution",
-      },
-    ],
+    url: (stops) => IENA.buildUrl(stops, 5),
+    selectors: IENA.selectors,
     svgPreview: TRANSILIEN_BOARD_SVG,
     beta: true,
   },
-  /* TRANSILIEN_DETAILED: {
+  TRANSILIEN_DETAILED: {
     name: "Prochain départ Transilien",
     commercialName: "IENA",
-    url: (stops) =>
-      `https://ecrans.leon.gp/sncf_transilien_new_with_stops/${
-        stops.at(0)?.stop.id
-      }/default`,
-    selectors: [
-      {
-        label: "Station",
-        selection: "STOP",
-      },
-    ],
+    beta: true,
+    url: (stops) => IENA.buildUrl(stops, 1),
+    selectors: IENA.selectors,
     svgPreview: TRANSILIEN_DETAILED_SVG,
   },
-  */
   PANAM: {
     name: "Prochains départs métro (type M5)",
     commercialName: "PANAM",
