@@ -86,11 +86,11 @@ const IENA = {
         stops.at(0)?.stop?.position.long
       }`,
       stop:
-        stops.at(0)?.stop?.id.replace("fr-idf:", "stop_area:") || "undefined",
+        stops.at(0)?.stop?.id.replace("fr-idf_", "stop_area:") || "undefined",
       lines:
         stops
           .at(0)
-          ?.routes.map((r) => r.id.replace("fr-idf:", "line:"))
+          ?.routes.map((r) => "line:" + r.id)
           .join(",") || "undefined",
       platforms: [].join(","),
     });
@@ -190,12 +190,9 @@ export const screens: Record<string, Screen> = {
       const urlParams = new URLSearchParams();
       urlParams.append(
         "from",
-        stops.at(0)?.stop.id.replace("fr-idf:", "stop_area:") || ""
+        stops.at(0)?.stop.id.replace("fr-idf_", "stop_area:") || ""
       );
-      urlParams.append(
-        "route",
-        stops.at(0)?.routes.at(0)?.id.replace("fr-idf:", "line:") || ""
-      );
+      urlParams.append("route", "line:" + stops.at(0)?.routes.at(0)?.id);
       if (!isTerminus) {
         urlParams.append(
           "to",
