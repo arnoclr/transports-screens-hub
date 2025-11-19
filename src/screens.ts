@@ -90,7 +90,7 @@ const IENA = {
       lines:
         stops
           .at(0)
-          ?.routes.map((r) => "line:" + r.id)
+          ?.routes.map((r) => r.id.replace("fr-idf_", "line:"))
           .join(",") || "undefined",
       platforms: [].join(","),
     });
@@ -192,7 +192,10 @@ export const screens: Record<string, Screen> = {
         "from",
         stops.at(0)?.stop.id.replace("fr-idf_", "stop_area:") || ""
       );
-      urlParams.append("route", "line:" + stops.at(0)?.routes.at(0)?.id);
+      urlParams.append(
+        "route",
+        stops.at(0)?.routes.at(0)?.id.replace("fr-idf_", "line:") || ""
+      );
       if (!isTerminus) {
         urlParams.append(
           "to",
