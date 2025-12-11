@@ -83,6 +83,11 @@ watch(
       <Selector
         :label="selector.label"
         :hint="selector.hint"
+        :authorized-agencies="
+          selector.selection !== 'SELECT'
+            ? selector.authorizedAgencies
+            : undefined
+        "
         :selector-type="selector.selection"
         :stop-route="selectedScreenParams.get(i)"
         @update:stop-routes="($event) => selectedScreenParams.set(i, $event)"

@@ -7,6 +7,7 @@ import type { SelectorType, StopAndMaybeRoutes } from "../screens";
 defineProps<{
   label: string;
   hint?: string;
+  authorizedAgencies?: string[];
   selectorType: SelectorType;
   stopRoute: StopAndMaybeRoutes | undefined;
 }>();
@@ -113,7 +114,11 @@ watch(
     <small v-if="hint"><br />{{ hint }}</small>
   </label>
   <ul>
-    <li v-for="stop in stops">
+    <li
+      v-for="stop in stops.filter((stop) =>
+        authorizedAgencies?.includes(stop.id.split('_').at(0) || '')
+      )"
+    >
       <label>
         <input
           v-if="selectorType === 'STOP'"

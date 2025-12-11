@@ -24,6 +24,7 @@ export type StopAndMaybeRoutes = {
 export type SelectorBase = {
   label: string;
   hint?: string;
+  authorizedAgencies: string[];
   selection: Exclude<SelectorType, "SELECT">;
 };
 
@@ -72,6 +73,7 @@ const LEON_GP_V2_SCREEN = {
         {
           label: "Station",
           selection: "STOP_AND_ROUTE",
+          authorizedAgencies: ["fr-idf"],
         },
       ],
     };
@@ -169,10 +171,12 @@ export const screens: Record<string, Screen> = {
       {
         label: "Station de départ",
         selection: "STOP_AND_ROUTE",
+        authorizedAgencies: ["fr-idf"],
       },
       {
         label: "Terminus",
         selection: "STOP",
+        authorizedAgencies: ["fr-idf"],
       },
     ],
     svgPreview: PANAM_SVG,
@@ -210,6 +214,7 @@ export const screens: Record<string, Screen> = {
       {
         label: "Station de départ",
         selection: "STOP_AND_ROUTE",
+        authorizedAgencies: ["fr-idf", "cz-pid"],
       },
       {
         label: "Terminus",
@@ -217,6 +222,7 @@ export const screens: Record<string, Screen> = {
         // TODO: propriétés optionnelles
         // hint: "Laisser vide pour afficher les départs dans toutes les directions",
         hint: "Choisir la même station pour afficher les départs dans toutes les directions",
+        authorizedAgencies: ["fr-idf", "cz-pid"],
       },
       // {
       //   label: "Gestion des trains courts",
