@@ -103,8 +103,9 @@ const IENA = {
       label: "Au départ de",
       selection: "STOP_AND_ROUTES",
       hint: "Sélectionnez toutes les lignes de train ainsi que leurs bus de substitution",
+      authorizedAgencies: ["fr-idf"],
     },
-  ] as Selector[],
+  ] satisfies Selector[],
 };
 
 export const screens: Record<string, Screen> = {
