@@ -63,11 +63,11 @@ const LEON_GP_V2_SCREEN = {
       svgPreview,
       beta,
       url: (params) => {
-        return `https://departs.leon.gp/screen/${type}/stop/${
+        return `https://departs.leon.gp/screen/?screenId=${type}&stopId=${
           params.at(0)?.stop.id
-        }/line/${params.at(0)?.routes.at(0)?.id}/pos/${
-          params.at(0)?.stop.position.lat
-        },${params.at(0)?.stop.position.long}`;
+        }&lineId=${
+          params.at(0)?.routes.at(0)?.id || "null"
+        }`;
       },
       selectors: [
         {
@@ -110,36 +110,36 @@ const IENA = {
 
 export const screens: Record<string, Screen> = {
   RATP_DEPARTURES_AND_DISRUPTIONS: LEON_GP_V2_SCREEN.construct(
-    "ratp_gareTrafic",
+    "gare-trafic",
     "Départs et Info trafic générale — RATP",
     RATP_DEPARTURES_AND_DISRUPTIONS_SVG,
     undefined,
     true
   ),
   RATP_GLOBAL_DISRUPTIONS: LEON_GP_V2_SCREEN.construct(
-    "ratp_trafic",
+    "information-trafic",
     "Info trafic générale — RATP",
     RATP_GLOBAL_DISRUPTIONS_SVG,
     undefined
   ),
   PANAM_169: LEON_GP_V2_SCREEN.construct(
-    "ratp_panam",
+    "metro",
     "Prochains départs métro (type M14)",
     PANAM_169_SVG,
     "PANAM"
   ),
   BUS_RATP_BASIC: LEON_GP_V2_SCREEN.construct(
-    "ratp_bus",
+    "bus",
     "Prochains départs BUS — RATP",
     RATP_BUS_SVG
   ),
   RER_RATP_BOARD: LEON_GP_V2_SCREEN.construct(
-    "ratp_rer",
+    "rer",
     "Prochains départs RER — RATP",
     RER_RATP_BOARD_SVG
   ),
   RATP_MULTIMODAL: LEON_GP_V2_SCREEN.construct(
-    "ratp_gare",
+    "gare",
     "Prochains départs — RATP",
     RATP_MULTIMODE_SVG
   ),
