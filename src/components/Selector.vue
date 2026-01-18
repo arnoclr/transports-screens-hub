@@ -2,18 +2,18 @@
 import { watchDebounced } from "@vueuse/core";
 import { ref, watch } from "vue";
 import { Wagon, type SimpleLine, type SimpleStop } from "../services/Wagon";
-import type { SelectorType, StopAndMaybeRoutes } from "../screens";
+import type { SelectorType, ScreenOption } from "../screens";
 
 defineProps<{
   label: string;
   hint?: string;
   authorizedAgencies?: string[];
   selectorType: SelectorType;
-  stopRoute: StopAndMaybeRoutes | undefined;
+  stopRoute: ScreenOption | undefined;
 }>();
 
 const emit = defineEmits<{
-  (e: "update:stopRoutes", value: StopAndMaybeRoutes): void;
+  (e: "update:stopRoutes", value: ScreenOption): void;
 }>();
 
 const searchTerms = ref<string>("");
@@ -31,7 +31,7 @@ watchDebounced(
     stops.value = await Wagon.searchStops(value);
     isLoading.value = false;
   },
-  { debounce: 400 }
+  { debounce: 400 },
 );
 
 function getStop(id: string): SimpleStop {
@@ -44,7 +44,7 @@ function getRoute(id: string, stop: SimpleStop): SimpleLine {
 
 function lineModeSvgs(stop: SimpleStop): Set<string> {
   return new Set(
-    stop.lines.map((line) => line.pictoSvg).filter((x) => x !== undefined)
+    stop.lines.map((line) => line.pictoSvg).filter((x) => x !== undefined),
   );
 }
 
@@ -67,7 +67,7 @@ function linesByMode(lines: SimpleLine[]): {
 
   return Array.from(modes.entries())
     .sort(
-      (a, b) => (a[1].at(0)?.importance ?? 0) - (b[1].at(0)?.importance ?? 0)
+      (a, b) => (a[1].at(0)?.importance ?? 0) - (b[1].at(0)?.importance ?? 0),
     )
     .map(([picto, lines]) => ({
       picto,
@@ -79,8 +79,8 @@ watch(
   () => stopModel.value,
   (value) => {
     const stop = getStop(value);
-    emit("update:stopRoutes", { stop, routes: [] });
-  }
+    emit("update:stopRoutes", { stop, routes: [], value: undefined });
+  },
 );
 
 watch(
@@ -89,8 +89,8 @@ watch(
     const [stopId, routeId] = value.split(" ");
     const stop = getStop(stopId);
     const route = getRoute(routeId, stop);
-    emit("update:stopRoutes", { stop, routes: [route] });
-  }
+    emit("update:stopRoutes", { stop, routes: [route], value: undefined });
+  },
 );
 
 watch(
@@ -102,8 +102,8 @@ watch(
       const [_, routeId] = stopIdRouteId.split(" ");
       return getRoute(routeId, stop);
     });
-    emit("update:stopRoutes", { stop, routes });
-  }
+    emit("update:stopRoutes", { stop, routes, value: undefined });
+  },
 );
 </script>
 
@@ -116,7 +116,7 @@ watch(
   <ul>
     <li
       v-for="stop in stops.filter((stop) =>
-        authorizedAgencies?.includes(stop.id.split('_').at(0) || '')
+        authorizedAgencies?.includes(stop.id.split('_').at(0) || ''),
       )"
     >
       <label>

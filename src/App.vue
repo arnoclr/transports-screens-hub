@@ -2,32 +2,33 @@
 import { computed, ref, watch } from "vue";
 import Selector from "./components/Selector.vue";
 import Donate from "./components/Donate.vue";
-import { screens, type Screen, type StopAndMaybeRoutes } from "./screens";
+import { screens, type Screen, type ScreenOption } from "./screens";
 import JoinDiscord from "./components/JoinDiscord.vue";
 
 const selectedScreen = ref<Screen | null>(null);
 
-const selectedScreenParams = ref<Map<number, StopAndMaybeRoutes>>(new Map());
+const selectedScreenParams = ref<Map<number, ScreenOption>>(new Map());
 
 const url = computed<string>(() => {
   const valuesOrdered = Array.from(selectedScreenParams.value.entries())
     .sort(([a], [b]) => a - b)
     .map(([, value]) => value);
-  return selectedScreen.value?.url(valuesOrdered, []) ?? "";
+  console.log(valuesOrdered);
+  return selectedScreen.value?.url(valuesOrdered) ?? "";
 });
 
 const allParamsSelected = computed<boolean>(
-  () => url.value.length > 0 && url.value.includes("undefined") === false
+  () => url.value.length > 0 && url.value.includes("undefined") === false,
 );
 
 const sendScreenEvent = () => {
-  const params: StopAndMaybeRoutes[] = Array.from(
-    selectedScreenParams.value.values()
+  const params: ScreenOption[] = Array.from(
+    selectedScreenParams.value.values(),
   );
   const linesNames = params.map(
-    (v: StopAndMaybeRoutes) => v.routes.at(0)?.number ?? "Aucune lignes"
+    (v: ScreenOption) => v.routes?.at(0)?.number ?? "Aucune lignes",
   );
-  const stopsNames = params.map((v: StopAndMaybeRoutes) => v.stop.name);
+  const stopsNames = params.map((v: ScreenOption) => v.stop?.name);
   // @ts-ignore
   dataLayer.push({
     event: "screen_opened",
@@ -40,9 +41,22 @@ const sendScreenEvent = () => {
 
 watch(
   () => selectedScreen.value,
-  () => {
-    selectedScreenParams.value = new Map();
-  }
+  (screen) => {
+    const selectors = screen?.selectors || [];
+    selectedScreenParams.value = new Map(
+      [...Array(selectors.length).keys()].map((i) => [
+        i,
+        {
+          stop: undefined,
+          routes: undefined,
+          value:
+            selectors[i]?.selection === "SELECT"
+              ? selectors[i].options.at(0)?.value
+              : undefined,
+        },
+      ]),
+    );
+  },
 );
 </script>
 
@@ -80,14 +94,32 @@ watch(
       :id="i + selectedScreen.name"
     >
       <hr v-if="i > 0" />
+      <label v-if="selector.selection === 'SELECT'">
+        {{ selector.label }}
+        <select
+          @change="
+            ($event) =>
+              selectedScreenParams.set(i, {
+                stop: undefined,
+                routes: undefined,
+                value: ($event.target as HTMLSelectElement).value,
+              })
+          "
+        >
+          <option
+            v-for="option in selector.options"
+            :key="option.value"
+            :value="option.value"
+          >
+            {{ option.label }}
+          </option>
+        </select>
+      </label>
       <Selector
+        v-else
         :label="selector.label"
         :hint="selector.hint"
-        :authorized-agencies="
-          selector.selection !== 'SELECT'
-            ? selector.authorizedAgencies
-            : undefined
-        "
+        :authorized-agencies="selector.authorizedAgencies"
         :selector-type="selector.selection"
         :stop-route="selectedScreenParams.get(i)"
         @update:stop-routes="($event) => selectedScreenParams.set(i, $event)"

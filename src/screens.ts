@@ -1,3 +1,4 @@
+import { IDFM_SIEL_TRAM_SVG } from "./previews/IDFM_SIEL_TRAM.svg";
 import { PANAM_SVG } from "./previews/PANAM.svg";
 import { PANAM_HORIZONTAL_SVG as PANAM_169_SVG } from "./previews/PANAM_HORIZONTAL.svg";
 import { RATP_BUS_SVG } from "./previews/RATP_BUS.svg";
@@ -16,9 +17,10 @@ export type SelectorType =
   | "STOP_AND_ROUTES"
   | "SELECT";
 
-export type StopAndMaybeRoutes = {
-  stop: SimpleStop;
-  routes: SimpleLine[];
+export type ScreenOption = {
+  value: string | undefined;
+  stop: SimpleStop | undefined;
+  routes: SimpleLine[] | undefined;
 };
 
 export type SelectorBase = {
@@ -40,22 +42,26 @@ export type Selector = SelectorBase | SelectSelector;
 export type Screen = {
   name: string;
   commercialName?: string;
-  url: (
-    selectedStations: StopAndMaybeRoutes[],
-    selectedValue: string[]
-  ) => string;
+  url: (options: ScreenOption[]) => string;
   selectors: Selector[];
   svgPreview: string;
   beta?: true;
 };
 
 const LEON_GP_V2_SCREEN = {
+  defaultSelectors: [
+    {
+      label: "Station",
+      selection: "STOP_AND_ROUTE",
+      authorizedAgencies: ["fr-idf"],
+    },
+  ] satisfies Selector[],
   construct(
     type: string,
     name: string,
     svgPreview: string,
     commercialName?: string,
-    beta?: true
+    beta?: true,
   ): Screen {
     return {
       name,
@@ -64,24 +70,16 @@ const LEON_GP_V2_SCREEN = {
       beta,
       url: (params) => {
         return `https://departs.leon.gp/screen/?screenId=${type}&stopId=${
-          params.at(0)?.stop.id
-        }&lineId=${
-          params.at(0)?.routes.at(0)?.id || "null"
-        }`;
+          params.at(0)?.stop?.id
+        }&lineId=${params.at(0)?.routes?.at(0)?.id || "null"}`;
       },
-      selectors: [
-        {
-          label: "Station",
-          selection: "STOP_AND_ROUTE",
-          authorizedAgencies: ["fr-idf"],
-        },
-      ],
+      selectors: this.defaultSelectors,
     };
   },
 };
 
 const IENA = {
-  buildUrl: (stops: StopAndMaybeRoutes[], rows: number) => {
+  buildUrl: (stops: ScreenOption[], rows: number) => {
     const params = new URLSearchParams({
       aimedDepartureCount: rows.toString(),
       coordinates: `${stops.at(0)?.stop?.position.lat},${
@@ -92,7 +90,7 @@ const IENA = {
       lines:
         stops
           .at(0)
-          ?.routes.map((r) => r.id.replace("fr-idf_", "line:"))
+          ?.routes?.map((r) => r.id.replace("fr-idf_", "line:"))
           .join(",") || "undefined",
       platforms: [].join(","),
     });
@@ -114,34 +112,34 @@ export const screens: Record<string, Screen> = {
     "Départs et Info trafic générale — RATP",
     RATP_DEPARTURES_AND_DISRUPTIONS_SVG,
     undefined,
-    true
+    true,
   ),
   RATP_GLOBAL_DISRUPTIONS: LEON_GP_V2_SCREEN.construct(
     "information-trafic",
     "Info trafic générale — RATP",
     RATP_GLOBAL_DISRUPTIONS_SVG,
-    undefined
+    undefined,
   ),
   PANAM_169: LEON_GP_V2_SCREEN.construct(
     "metro",
     "Prochains départs métro (type M14)",
     PANAM_169_SVG,
-    "PANAM"
+    "PANAM",
   ),
   BUS_RATP_BASIC: LEON_GP_V2_SCREEN.construct(
     "bus",
     "Prochains départs BUS — RATP",
-    RATP_BUS_SVG
+    RATP_BUS_SVG,
   ),
   RER_RATP_BOARD: LEON_GP_V2_SCREEN.construct(
     "rer",
     "Prochains départs RER — RATP",
-    RER_RATP_BOARD_SVG
+    RER_RATP_BOARD_SVG,
   ),
   RATP_MULTIMODAL: LEON_GP_V2_SCREEN.construct(
     "gare",
     "Prochains départs — RATP",
-    RATP_MULTIMODE_SVG
+    RATP_MULTIMODE_SVG,
   ),
   TRANSILIEN_BOARD: {
     name: "Prochains départs Transilien",
@@ -163,10 +161,10 @@ export const screens: Record<string, Screen> = {
     name: "Prochains départs métro (type M5)",
     commercialName: "PANAM",
     url: (stops) =>
-      `https://panam.arno.cl/?near=${stops.at(0)?.stop.position.lat},${
-        stops.at(0)?.stop.position.long
-      }&for=${stops.at(0)?.routes.at(0)?.number}&directionHint=${
-        stops.at(1)?.stop.name
+      `https://panam.arno.cl/?near=${stops.at(0)?.stop?.position.lat},${
+        stops.at(0)?.stop?.position.long
+      }&for=${stops.at(0)?.routes?.at(0)?.number}&directionHint=${
+        stops.at(1)?.stop?.name
       }`,
     selectors: [
       {
@@ -182,32 +180,64 @@ export const screens: Record<string, Screen> = {
     ],
     svgPreview: PANAM_SVG,
   },
+  IDFM_TRAM: {
+    name: "Prochains départs Tram (type T1)",
+    commercialName: "SIEL TRAM",
+    url([stopAndRoute, mode, isInvertedColumns]) {
+      const stopId = stopAndRoute?.stop?.id.split(":").pop();
+      const routeId = stopAndRoute?.routes?.at(0)?.id.split(":").pop();
+      return `https://siel-tram.leon.gp/?stop=${stopId}&line=${routeId}&invertedColumns=${isInvertedColumns.value}&mode=${mode.value}`;
+    },
+    selectors: [
+      ...LEON_GP_V2_SCREEN.defaultSelectors,
+      {
+        selection: "SELECT",
+        label: "Mode d'affichage",
+        options: [
+          { label: "Automatique", value: "AUTO" },
+          { label: "Destinations", value: "DESTINATIONS" },
+        ],
+      },
+      {
+        selection: "SELECT",
+        label: "Affichage de l'information trafic",
+        options: [
+          { label: "À droite", value: "false" },
+          { label: "À gauche", value: "true" },
+        ],
+      },
+    ],
+    svgPreview: IDFM_SIEL_TRAM_SVG,
+  },
   SYSPAD: {
     name: "Prochain départ RER",
     commercialName: "Syspad",
-    url: (stops) => {
+    url: ([origin, terminus, isShortTrainMessage]) => {
       const url =
         "https://utilisez-wagon-pour-vos-deplacements-du-quotidien.syspad.arno.cl/";
 
-      const isTerminus = stops.at(0)?.stop.id === stops.at(1)?.stop.id;
-      const terminusPosition = stops.at(1)?.stop.position;
+      const isTerminus = origin?.stop?.id === terminus?.stop?.id;
+      const terminusPosition = terminus?.stop?.position;
 
       const urlParams = new URLSearchParams();
       urlParams.append(
         "from",
-        stops.at(0)?.stop.id.replace("fr-idf_", "stop_area:") || ""
+        origin?.stop?.id.replace("fr-idf_", "stop_area:") || "",
       );
       urlParams.append(
         "route",
-        stops.at(0)?.routes.at(0)?.id.replace("fr-idf_", "line:") || ""
+        origin?.routes?.at(0)?.id.replace("fr-idf_", "line:") || "",
       );
       if (!isTerminus) {
         urlParams.append(
           "to",
-          `${terminusPosition?.lat},${terminusPosition?.long}`
+          `${terminusPosition?.lat},${terminusPosition?.long}`,
         );
       }
-      urlParams.append("shortTrainMessage", "none");
+      urlParams.append(
+        "shortTrainMessage",
+        isShortTrainMessage?.value ?? "none",
+      );
 
       return url + "?" + urlParams.toString();
     },
@@ -225,15 +255,15 @@ export const screens: Record<string, Screen> = {
         hint: "Choisir la même station pour afficher les départs dans toutes les directions",
         authorizedAgencies: ["fr-idf", "cz-pid"],
       },
-      // {
-      //   label: "Gestion des trains courts",
-      //   selection: "SELECT",
-      //   options: [
-      //     { label: "Ne rien afficher", value: "none" },
-      //     { label: "Indiquer de se déplacer vers la droite", value: "right" },
-      //     { label: "Indiquer de se déplacer vers la gauche", value: "left" },
-      //   ],
-      // },
+      {
+        label: "Gestion des trains courts",
+        selection: "SELECT",
+        options: [
+          { label: "Ne rien afficher", value: "none" },
+          { label: "Indiquer de se déplacer vers la droite", value: "right" },
+          { label: "Indiquer de se déplacer vers la gauche", value: "left" },
+        ],
+      },
     ],
     svgPreview: SYSPAD_SVG,
   },
