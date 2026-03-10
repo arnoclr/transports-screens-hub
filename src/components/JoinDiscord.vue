@@ -5,7 +5,7 @@
       Rejoingnez notre serveur Discord pour discuter avec nous ou des membres de
       la commmunauté, proposer vos idées ou remonter des bugs.
     </p>
-    <a href="https://discord.gg/tPM3Z2kt3n">
+    <a href="https://discord.gg/EQ7VMx5tGM">
       <svg
         class="icon"
         width="73"
