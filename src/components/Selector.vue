@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { watchDebounced } from "@vueuse/core";
+import { useDark, usePreferredColorScheme, watchDebounced } from "@vueuse/core";
 import { ref, watch } from "vue";
 import { Wagon, type SimpleLine, type SimpleStop } from "../services/Wagon";
 import type { SelectorType, ScreenOption, SelectorBase } from "../screens";
@@ -23,6 +23,7 @@ const stopRouteModel = ref("");
 const routesModel = ref<string[]>([]);
 const uuid = crypto.randomUUID();
 const isLoading = ref(false);
+const colorScheme = usePreferredColorScheme();
 
 watchDebounced(
   searchTerms,
@@ -46,6 +47,18 @@ function lineModeSvgs(stop: SimpleStop): Set<string> {
   return new Set(
     stop.lines.map((line) => line.pictoSvg).filter((x) => x !== undefined),
   );
+}
+
+function colorizeSvg(svg: string, darkColors: Record<string, string>): string {
+  if (colorScheme.value !== "dark") {
+    return svg;
+  }
+  let result = svg;
+  for (const [color, darkColor] of Object.entries(darkColors)) {
+    const regex = new RegExp(color.replace("#", "#?"), "gi");
+    result = result.replace(regex, darkColor);
+  }
+  return result;
 }
 
 function linesByMode(lines: SimpleLine[]): {
@@ -145,9 +158,23 @@ watch(
       >
         <ul>
           <li v-for="mode in linesByMode(stop.lines)" :key="mode.picto">
-            <div class="modePictoRow" v-html="mode.picto"></div>
+            <div
+              class="modePictoRow"
+              v-html="
+                colorizeSvg(mode.picto, stop.lines.at(0)?.darkColors ?? {})
+              "
+            ></div>
             <label class="picto" v-for="line in mode.lines" :key="line.id">
-              <div class="lineShape" v-html="line.numberShapeSvg"></div>
+              <div
+                v-if="line.numberShapeSvg"
+                class="lineShape"
+                v-html="colorizeSvg(line.numberShapeSvg, line.darkColors)"
+              ></div>
+              <div v-else>
+                <span style="font-style: italic; color: grey">{{
+                  line.number
+                }}</span>
+              </div>
               <input
                 v-if="selectorType === 'STOP_AND_ROUTE'"
                 type="radio"

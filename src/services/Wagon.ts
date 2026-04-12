@@ -6,6 +6,7 @@ export interface SimpleLine {
   pictoSvg?: string;
   numberShapeSvg?: string;
   importance: number;
+  darkColors: Record<string, string>;
 }
 
 export interface SimpleStop {
@@ -23,7 +24,8 @@ export interface Position {
 function processSVG(svg: string): string {
   return svg
     .replace(/width="[^"]+"/, "")
-    .replace(/height="[^"]+"/, `height="100%"`);
+    .replace(/height="[^"]+"/, `height="100%"`)
+    .replace("bold", "normal");
 }
 
 export class Wagon {
@@ -49,8 +51,8 @@ export class Wagon {
       new Set(
         stopDto.stops
           .map((stop: any) => stop.lines.map((line: any) => line))
-          .flat()
-      )
+          .flat(),
+      ),
     );
     return {
       id: stopDto.id,
@@ -69,6 +71,7 @@ export class Wagon {
       pictoSvg: processSVG(lineDto.modeSvg ?? ""),
       numberShapeSvg: processSVG(lineDto.numberShapeSvg ?? ""),
       importance: lineDto.importance,
+      darkColors: lineDto.replacementColors?.dark ?? {},
     };
   }
 
