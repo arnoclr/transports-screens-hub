@@ -26,7 +26,7 @@ export type ScreenOption = {
 export type SelectorBase = {
   label: string;
   hint?: string;
-  authorizedAgencies: string[];
+  authorizedAgencies: string[] | "all";
   selection: Exclude<SelectorType, "SELECT">;
 };
 
@@ -85,12 +85,11 @@ const IENA = {
       coordinates: `${stops.at(0)?.stop?.position.lat},${
         stops.at(0)?.stop?.position.long
       }`,
-      stop:
-        stops.at(0)?.stop?.id.replace("fr-idf_", "stop_area:") || "undefined",
+      stop: stops.at(0)?.stop?.id || "undefined",
       lines:
         stops
           .at(0)
-          ?.routes?.map((r) => r.id.replace("fr-idf_", "line:"))
+          ?.routes?.map((r) => r.id)
           .join(",") || "undefined",
       platforms: [].join(","),
     });
@@ -101,7 +100,7 @@ const IENA = {
       label: "Au départ de",
       selection: "STOP_AND_ROUTES",
       hint: "Sélectionnez toutes les lignes de train ainsi que leurs bus de substitution",
-      authorizedAgencies: ["fr-idf"],
+      authorizedAgencies: "all",
     },
   ] satisfies Selector[],
 };

@@ -2,12 +2,12 @@
 import { watchDebounced } from "@vueuse/core";
 import { ref, watch } from "vue";
 import { Wagon, type SimpleLine, type SimpleStop } from "../services/Wagon";
-import type { SelectorType, ScreenOption } from "../screens";
+import type { SelectorType, ScreenOption, SelectorBase } from "../screens";
 
 defineProps<{
   label: string;
   hint?: string;
-  authorizedAgencies?: string[];
+  authorizedAgencies?: SelectorBase["authorizedAgencies"];
   selectorType: SelectorType;
   stopRoute: ScreenOption | undefined;
 }>();
@@ -115,8 +115,10 @@ watch(
   </label>
   <ul>
     <li
-      v-for="stop in stops.filter((stop) =>
-        authorizedAgencies?.includes(stop.id.split('_').at(0) || ''),
+      v-for="stop in stops.filter(
+        (stop) =>
+          authorizedAgencies === 'all' ||
+          authorizedAgencies?.includes(stop.id.split('_').at(0) || ''),
       )"
     >
       <label>
