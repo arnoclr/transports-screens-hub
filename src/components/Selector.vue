@@ -1,8 +1,8 @@
 <script lang="ts" setup>
-import { useDark, usePreferredColorScheme, watchDebounced } from "@vueuse/core";
+import { usePreferredColorScheme, watchDebounced } from "@vueuse/core";
 import { ref, watch } from "vue";
+import type { ScreenOption, SelectorBase, SelectorType } from "../screens";
 import { Wagon, type SimpleLine, type SimpleStop } from "../services/Wagon";
-import type { SelectorType, ScreenOption, SelectorBase } from "../screens";
 
 defineProps<{
   label: string;
