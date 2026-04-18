@@ -66,8 +66,11 @@ function linesByMode(lines: SimpleLine[]): {
   lines: SimpleLine[];
 }[] {
   const modes = new Map<string, SimpleLine[]>();
+  const sortedLines = lines.sort((a, b) =>
+    a.number.padStart(10, "0").localeCompare(b.number.padStart(10, "0")),
+  );
 
-  for (const line of lines) {
+  for (const line of sortedLines) {
     const mode = line.pictoSvg;
     if (mode === undefined) {
       continue;
