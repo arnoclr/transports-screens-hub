@@ -80,6 +80,7 @@ const LEON_GP_V2_SCREEN = {
 
 const IENA = {
   buildUrl: (stops: ScreenOption[], rows: number) => {
+    const direction = stops.at(1)?.value;
     const params = new URLSearchParams({
       aimedDepartureCount: rows.toString(),
       coordinates: `${stops.at(0)?.stop?.position.lat},${
@@ -93,6 +94,11 @@ const IENA = {
           .join(",") || "undefined",
       platforms: [].join(","),
     });
+
+    if (direction !== undefined && direction !== "") {
+      params.set("direction", direction);
+    }
+
     return "https://iena.arno.cl/?" + params.toString();
   },
   selectors: [
@@ -101,6 +107,15 @@ const IENA = {
       selection: "STOP_AND_ROUTES",
       hint: "Sélectionnez toutes les lignes de train ainsi que leurs bus de substitution",
       authorizedAgencies: "all",
+    },
+    {
+      selection: "SELECT",
+      label: "Sens",
+      options: [
+        { label: "Aller/Retour", value: "" },
+        { label: "Aller", value: "0" },
+        { label: "Retour", value: "1" },
+      ],
     },
   ] satisfies Selector[],
 };
