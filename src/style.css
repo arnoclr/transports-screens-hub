@@ -1,5 +1,6 @@
 :root {
     --pico-font-family: Arial Rounded MT Bold, sans-serif;
+    --pico-border-radius: 0px;
 }
 
 html {
@@ -9,5 +10,6 @@ html {
 @media (prefers-color-scheme: dark) {
     html {
         background-color: darkslategrey;
+        color: white;
     }
 }

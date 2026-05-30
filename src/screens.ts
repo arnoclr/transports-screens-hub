@@ -46,6 +46,7 @@ export type Screen = {
   selectors: Selector[];
   svgPreview: string;
   beta?: true;
+  iframeRepresentation?: (iframeUrl: string) => string;
 };
 
 const LEON_GP_V2_SCREEN = {
@@ -118,6 +119,8 @@ const IENA = {
       ],
     },
   ] satisfies Selector[],
+  iframeRepresentation: (iframeUrl: string) =>
+    `<div style="background-color: #333; padding: 7vh;"><div style="background-color: black; padding: 0.3vh;"><iframe src="${iframeUrl}" style="height: 33vh; aspect-ratio: 16 / 9;" frameborder="0"></iframe></div></div>`,
 };
 
 export const screens: Record<string, Screen> = {
@@ -162,6 +165,7 @@ export const screens: Record<string, Screen> = {
     selectors: IENA.selectors,
     svgPreview: TRANSILIEN_BOARD_SVG,
     beta: true,
+    iframeRepresentation: IENA.iframeRepresentation,
   },
   TRANSILIEN_DETAILED: {
     name: "Prochain départ Transilien",
@@ -170,6 +174,7 @@ export const screens: Record<string, Screen> = {
     url: (stops) => IENA.buildUrl(stops, 1),
     selectors: IENA.selectors,
     svgPreview: TRANSILIEN_DETAILED_SVG,
+    iframeRepresentation: IENA.iframeRepresentation,
   },
   PANAM: {
     name: "Prochains départs métro (type M5)",
@@ -280,5 +285,7 @@ export const screens: Record<string, Screen> = {
       },
     ],
     svgPreview: SYSPAD_SVG,
+    iframeRepresentation: (iframeUrl) =>
+      `<div style="background-color: grey; padding: 0.5vh; border-radius: 3vh;"><div style="background-color: black; padding: 3vh; border-radius: 2.5vh;"><iframe src="${iframeUrl}" style="width: 40vw; aspect-ratio: 32 / 9;" frameborder="0"></iframe></div></div>`,
   },
 };

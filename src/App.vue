@@ -61,32 +61,41 @@ watch(
 </script>
 
 <template>
-  <section class="screens">
+  <section>
     <hgroup>
-      <p>{{ Object.values(screens).length }} écrans disponibles</p>
+      <p>
+        <span style="opacity: 0.6">prochainstrains.arno.cl&nbsp;&nbsp;</span
+        ><strong>&gt;</strong>&nbsp;
+        <a href="#" @click="selectedScreen = null">
+          {{ Object.values(screens).length }} écrans disponibles
+        </a>
+        <template v-if="selectedScreen">
+          &nbsp;&gt;&nbsp; {{ selectedScreen.name }}
+        </template>
+      </p>
     </hgroup>
-    <label v-for="[id, screen] in Object.entries(screens)" :key="id">
-      <div
-        class="preview"
-        :class="{ beta: screen.beta }"
-        v-html="screen.svgPreview"
-      ></div>
-      <input
-        type="radio"
-        name="screen"
-        :value="screen"
-        v-model="selectedScreen"
-      />
-      <span v-if="screen.beta" class="beta">Beta</span>
-    </label>
   </section>
-  <article>
+  <section class="screens-box" v-if="!selectedScreen">
+    <div class="screens">
+      <button
+        v-for="[id, screen] in Object.entries(screens)"
+        :key="id"
+        :class="{ selected: selectedScreen === screen }"
+        @click="selectedScreen = screen"
+      >
+        <div
+          class="preview"
+          :class="{ beta: screen.beta }"
+          v-html="screen.svgPreview"
+        ></div>
+        <span v-if="screen.beta" class="beta">Beta</span>
+      </button>
+    </div>
+  </section>
+  <article v-if="selectedScreen">
     <hgroup>
-      <template v-if="selectedScreen">
-        <h1>{{ selectedScreen.name }}</h1>
-        <p>{{ selectedScreen.commercialName }}</p>
-      </template>
-      <h1 v-else>—</h1>
+      <h1>{{ selectedScreen.name }}</h1>
+      <p>{{ selectedScreen.commercialName }}</p>
     </hgroup>
     <template
       v-if="selectedScreen"
@@ -127,7 +136,7 @@ watch(
     </template>
   </article>
   <section>
-    <p>
+    <p v-if="selectedScreen">
       <a
         :disabled="allParamsSelected ? undefined : true"
         :href="url"
@@ -140,6 +149,11 @@ watch(
     <p v-if="allParamsSelected">
       <code>{{ url }}</code>
     </p>
+    <div
+      v-if="selectedScreen?.iframeRepresentation"
+      v-html="selectedScreen.iframeRepresentation?.(url)"
+      style="position: fixed; bottom: 4vh; right: 4vh; z-index: 999"
+    ></div>
     <div class="links">
       <JoinDiscord />
       <Donate />
@@ -149,25 +163,63 @@ watch(
 
 <style scoped>
 .preview :deep(svg) {
-  height: 12vh;
+  height: 18vh;
   width: auto;
-  border-radius: 0.8vh;
+  border-radius: 0vh;
 }
 
 .preview.beta :deep(svg) {
   filter: grayscale(100%);
 }
 
-.screens label {
+.screens button {
   position: relative;
   display: inline-block;
-  margin-right: 1vh;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
 }
 
-.screens input[type="radio"] {
-  position: absolute;
-  left: 1vh;
-  bottom: 1vh;
+.screens-box {
+  width: calc(100vw - var(--pico-block-spacing-horizontal));
+  overflow-x: hidden;
+}
+
+@media (min-width: 576px) {
+  .screens-box {
+    --safe-area: calc(100vw - 510px);
+    width: calc(100vw - var(--safe-area) / 2);
+  }
+}
+
+@media (min-width: 768px) {
+  .screens-box {
+    --safe-area: calc(100vw - 700px);
+  }
+}
+
+@media (min-width: 1024px) {
+  .screens-box {
+    --safe-area: calc(100vw - 950px);
+  }
+}
+
+@media (min-width: 1280px) {
+  .screens-box {
+    --safe-area: calc(100vw - 1200px);
+  }
+}
+
+.screens {
+  width: 130%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.4vh;
+}
+
+.screens button.selected {
+  border-color: var(--pico-primary-color, #1095c1);
 }
 
 .screens span.beta {
@@ -189,7 +241,13 @@ article {
 
 .links {
   display: flex;
+  flex-wrap: wrap;
   margin: 5rem 0;
   gap: 5rem;
+}
+
+.links > * {
+  flex: 1;
+  min-width: 250px;
 }
 </style>
