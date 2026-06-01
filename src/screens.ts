@@ -75,6 +75,8 @@ const LEON_GP_V2_SCREEN = {
         }&lineId=${params.at(0)?.routes?.at(0)?.id || "null"}`;
       },
       selectors: this.defaultSelectors,
+      iframeRepresentation: (iframeUrl) =>
+        `<div style="background-color: grey; padding: 0.5vh; border-radius: 3vh;"><div style="background-color: black; padding: 5vh; border-radius: 2.5vh;"><iframe src="${iframeUrl}" style="width: 44vh; aspect-ratio: 16 / 9;" frameborder="0"></iframe></div></div>`,
     };
   },
 };
@@ -198,6 +200,8 @@ export const screens: Record<string, Screen> = {
       },
     ],
     svgPreview: PANAM_SVG,
+    iframeRepresentation: (iframeUrl) =>
+      `<div style="display: flex; flex-direction: column;"><div style="height: 8vh; background: linear-gradient(to right, #EEE, #FFF);"></div><div style="background-color: black; padding: 1vh;"><iframe src="${iframeUrl}" style="width: 70vh; aspect-ratio: 1920 / 540;" frameborder="0"></iframe></div></div>`,
   },
   IDFM_TRAM: {
     name: "Prochains départs Tram (type T1)",
@@ -227,6 +231,8 @@ export const screens: Record<string, Screen> = {
       },
     ],
     svgPreview: IDFM_SIEL_TRAM_SVG,
+    iframeRepresentation: (iframeUrl) =>
+      `<div style="background-color: #CCC; padding: 0.5vh; border-radius: 3vh;"><div style="background-color: black; padding: 5vh; border-radius: 2.5vh;"><iframe src="${iframeUrl}" style="width: 60vh; aspect-ratio: 43 / 12;" frameborder="0"></iframe></div></div>`,
   },
   SYSPAD: {
     name: "Prochain départ RER",
@@ -286,6 +292,6 @@ export const screens: Record<string, Screen> = {
     ],
     svgPreview: SYSPAD_SVG,
     iframeRepresentation: (iframeUrl) =>
-      `<div style="background-color: grey; padding: 0.5vh; border-radius: 3vh;"><div style="background-color: black; padding: 3vh; border-radius: 2.5vh;"><iframe src="${iframeUrl}" style="width: 40vw; aspect-ratio: 32 / 9;" frameborder="0"></iframe></div></div>`,
+      `<div style="background-color: #CCC; padding: 0.5vh; border-radius: 3vh;"><div style="background-color: black; padding: 3vh; border-radius: 2.5vh;"><iframe src="${iframeUrl}" style="width: 70vh; aspect-ratio: 32 / 9;" frameborder="0"></iframe></div></div>`,
   },
 };
