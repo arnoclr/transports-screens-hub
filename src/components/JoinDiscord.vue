@@ -2,7 +2,7 @@
   <section>
     <h2>Des questions ?</h2>
     <p>
-      Rejoingnez notre serveur Discord pour discuter avec nous ou des membres de
+      Rejoignez notre serveur Discord pour discuter avec nous ou des membres de
       la commmunauté, proposer vos idées ou remonter des bugs.
     </p>
     <a href="https://discord.gg/EQ7VMx5tGM">
