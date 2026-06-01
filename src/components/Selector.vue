@@ -2,7 +2,12 @@
 import { usePreferredColorScheme, watchDebounced } from "@vueuse/core";
 import { ref, watch } from "vue";
 import type { ScreenOption, SelectorBase, SelectorType } from "../screens";
-import { Wagon, type SimpleLine, type SimpleStop } from "../services/Wagon";
+import {
+  Wagon,
+  ForbiddenError,
+  type SimpleLine,
+  type SimpleStop,
+} from "../services/Wagon";
 
 defineProps<{
   label: string;
@@ -23,14 +28,24 @@ const stopRouteModel = ref("");
 const routesModel = ref<string[]>([]);
 const uuid = crypto.randomUUID();
 const isLoading = ref(false);
+const forbiddenError = ref(false);
 const colorScheme = usePreferredColorScheme();
 
 watchDebounced(
   searchTerms,
   async (value) => {
     isLoading.value = true;
-    stops.value = await Wagon.searchStops(value);
-    isLoading.value = false;
+    forbiddenError.value = false;
+    try {
+      stops.value = await Wagon.searchStops(value);
+    } catch (e) {
+      if (e instanceof ForbiddenError) {
+        forbiddenError.value = true;
+      }
+      stops.value = [];
+    } finally {
+      isLoading.value = false;
+    }
   },
   { debounce: 400 },
 );
@@ -129,6 +144,11 @@ watch(
     <input type="text" v-model="searchTerms" spellcheck="false" />
     <small v-if="hint"><br />{{ hint }}</small>
   </label>
+  <p v-if="forbiddenError"><i>
+    Le service n'est disponible que dans les pays couverts par Wagon, dont la
+    France, le Canada et d'autres. Ceci peut aussi survenir lors de
+    l'utilisation d'un VPN.</i>
+  </p>
   <ul>
     <li
       v-for="stop in stops.filter(

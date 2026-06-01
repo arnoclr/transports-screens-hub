@@ -28,6 +28,13 @@ function processSVG(svg: string): string {
     .replace("bold", "normal");
 }
 
+export class ForbiddenError extends Error {
+  constructor() {
+    super("Forbidden");
+    this.name = "ForbiddenError";
+  }
+}
+
 export class Wagon {
   private static BASE_URL = "https://api-wagon.arno.cl/gantry/";
 
@@ -84,6 +91,10 @@ export class Wagon {
     params.append("q", search);
 
     const response = await fetch(`${this.baseUrl}?${params.toString()}`);
+
+    if (response.status === 403) {
+      throw new ForbiddenError();
+    }
 
     if (!response.ok) {
       throw new Error("Failed to search stations");
