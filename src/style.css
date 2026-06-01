@@ -4,12 +4,12 @@
 }
 
 html {
-    background-color: beige;
+    background: linear-gradient(to bottom, #E2E10B 0vh, #E2E10B 60vh, #eee 60vh);
 }
 
 @media (prefers-color-scheme: dark) {
     html {
-        background-color: darkslategrey;
+        background: linear-gradient(to bottom, #0a0082 0vh, #0a0082 60vh, #000 60vh);
         color: white;
     }
 }

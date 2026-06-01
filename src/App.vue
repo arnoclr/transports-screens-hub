@@ -134,6 +134,10 @@ watch(
         @update:stop-routes="($event) => selectedScreenParams.set(i, $event)"
       ></Selector>
     </template>
+    <i
+      >Résultats de recherche fournis par
+      <a href="https://getwagon.fr/?utm_source=prochainstrains">Wagon</a></i
+    >
   </article>
   <section>
     <p v-if="selectedScreen">
