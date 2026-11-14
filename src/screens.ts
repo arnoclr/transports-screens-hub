@@ -39,14 +39,19 @@ export type SelectSelector = {
 
 export type Selector = SelectorBase | SelectSelector;
 
+// Le contenu peut être un aperçu SVG ou un écran en direct.
+export type ScreenFrame = (content: string) => string;
+
 export type Screen = {
   name: string;
+  author: string;
   commercialName?: string;
   url: (options: ScreenOption[]) => string;
   selectors: Selector[];
   svgPreview: string;
   beta?: true;
-  iframeRepresentation?: (iframeUrl: string) => string;
+  frame: ScreenFrame;
+  aspectRatio: string;
 };
 
 const LEON_GP_V2_SCREEN = {
@@ -66,6 +71,7 @@ const LEON_GP_V2_SCREEN = {
   ): Screen {
     return {
       name,
+      author: "Léon",
       commercialName,
       svgPreview,
       beta,
@@ -75,8 +81,9 @@ const LEON_GP_V2_SCREEN = {
         }&lineId=${params.at(0)?.routes?.at(0)?.id || "null"}`;
       },
       selectors: this.defaultSelectors,
-      iframeRepresentation: (iframeUrl) =>
-        `<div style="background-color: grey; padding: 0.5vh; border-radius: 3vh;"><div style="background-color: black; padding: 5vh; border-radius: 2.5vh;"><iframe src="${iframeUrl}" style="width: 44vh; aspect-ratio: 16 / 9;" frameborder="0"></iframe></div></div>`,
+      frame: (content) =>
+        `<div style="box-sizing:border-box;height:100%;padding:calc(var(--frame-unit) * .5);border-radius:calc(var(--frame-unit) * 3);background:grey"><div style="box-sizing:border-box;height:100%;padding:calc(var(--frame-unit) * 5);border-radius:calc(var(--frame-unit) * 2.5);background:black">${content}</div></div>`,
+      aspectRatio: "16 / 9",
     };
   },
 };
@@ -121,8 +128,8 @@ const IENA = {
       ],
     },
   ] satisfies Selector[],
-  iframeRepresentation: (iframeUrl: string) =>
-    `<div style="background-color: #333; padding: 7vh;"><div style="background-color: black; padding: 0.3vh;"><iframe src="${iframeUrl}" style="height: 33vh; aspect-ratio: 16 / 9;" frameborder="0"></iframe></div></div>`,
+  frame: ((content) =>
+    `<div style="box-sizing:border-box;height:100%;padding:calc(var(--frame-unit) * 7);background:#333"><div style="box-sizing:border-box;height:100%;padding:calc(var(--frame-unit) * .3);background:black">${content}</div></div>`) satisfies ScreenFrame,
 };
 
 export const screens: Record<string, Screen> = {
@@ -162,24 +169,29 @@ export const screens: Record<string, Screen> = {
   ),
   TRANSILIEN_BOARD: {
     name: "Prochains départs Transilien",
+    author: "Arno",
     commercialName: "IENA",
     url: (stops) => IENA.buildUrl(stops, 5),
     selectors: IENA.selectors,
     svgPreview: TRANSILIEN_BOARD_SVG,
     beta: true,
-    iframeRepresentation: IENA.iframeRepresentation,
+    frame: IENA.frame,
+    aspectRatio: "16 / 9",
   },
   TRANSILIEN_DETAILED: {
     name: "Prochain départ Transilien",
+    author: "Arno",
     commercialName: "IENA",
     beta: true,
     url: (stops) => IENA.buildUrl(stops, 1),
     selectors: IENA.selectors,
     svgPreview: TRANSILIEN_DETAILED_SVG,
-    iframeRepresentation: IENA.iframeRepresentation,
+    frame: IENA.frame,
+    aspectRatio: "16 / 9",
   },
   PANAM: {
     name: "Prochains départs métro (type M5)",
+    author: "Arno",
     commercialName: "PANAM",
     url: (stops) =>
       `https://panam.arno.cl/?near=${stops.at(0)?.stop?.position.lat},${
@@ -200,11 +212,13 @@ export const screens: Record<string, Screen> = {
       },
     ],
     svgPreview: PANAM_SVG,
-    iframeRepresentation: (iframeUrl) =>
-      `<div style="display: flex; flex-direction: column;"><div style="height: 8vh; background: linear-gradient(to right, #EEE, #FFF);"></div><div style="background-color: black; padding: 1vh;"><iframe src="${iframeUrl}" style="width: 70vh; aspect-ratio: 1920 / 540;" frameborder="0"></iframe></div></div>`,
+    frame: (content) =>
+      `<div style="box-sizing:border-box;height:100%;display:flex;flex-direction:column"><div style="height:calc(var(--frame-unit) * 8);flex:none;background:linear-gradient(to right,#eee,#fff)"></div><div style="box-sizing:border-box;flex:1;min-height:0;padding:calc(var(--frame-unit));background:black">${content}</div></div>`,
+    aspectRatio: "1920 / 540",
   },
   IDFM_TRAM: {
     name: "Prochains départs Tram (type T1)",
+    author: "Léon",
     commercialName: "SIEL TRAM",
     url([stopAndRoute, mode, isInvertedColumns]) {
       const stopId = stopAndRoute?.stop?.id.split(":").pop();
@@ -231,11 +245,13 @@ export const screens: Record<string, Screen> = {
       },
     ],
     svgPreview: IDFM_SIEL_TRAM_SVG,
-    iframeRepresentation: (iframeUrl) =>
-      `<div style="background-color: #CCC; padding: 0.5vh; border-radius: 3vh;"><div style="background-color: black; padding: 5vh; border-radius: 2.5vh;"><iframe src="${iframeUrl}" style="width: 60vh; aspect-ratio: 43 / 12;" frameborder="0"></iframe></div></div>`,
+    frame: (content) =>
+      `<div style="box-sizing:border-box;height:100%;padding:calc(var(--frame-unit) * .5);border-radius:calc(var(--frame-unit) * 3);background:#ccc"><div style="box-sizing:border-box;height:100%;padding:calc(var(--frame-unit) * 5);border-radius:calc(var(--frame-unit) * 2.5);background:black">${content}</div></div>`,
+    aspectRatio: "43 / 12",
   },
   SYSPAD: {
     name: "Prochain départ RER",
+    author: "Arno",
     commercialName: "Syspad",
     url: ([origin, terminus, isShortTrainMessage]) => {
       const url =
@@ -285,7 +301,8 @@ export const screens: Record<string, Screen> = {
       },
     ],
     svgPreview: SYSPAD_SVG,
-    iframeRepresentation: (iframeUrl) =>
-      `<div style="background-color: #CCC; padding: 0.5vh; border-radius: 3vh;"><div style="background-color: black; padding: 3vh; border-radius: 2.5vh;"><iframe src="${iframeUrl}" style="width: 70vh; aspect-ratio: 32 / 9;" frameborder="0"></iframe></div></div>`,
+    frame: (content) =>
+      `<div style="box-sizing:border-box;height:100%;padding:calc(var(--frame-unit) * .5);border-radius:calc(var(--frame-unit) * 3);background:#ccc"><div style="box-sizing:border-box;height:100%;padding:calc(var(--frame-unit) * 3);border-radius:calc(var(--frame-unit) * 2.5);background:black">${content}</div></div>`,
+    aspectRatio: "32 / 9",
   },
 };

@@ -1,6 +1,6 @@
-<script lang="ts" setup>
-import { usePreferredColorScheme, watchDebounced } from "@vueuse/core";
-import { ref, watch } from "vue";
+<script setup lang="ts">
+import { watchDebounced } from "@vueuse/core";
+import { computed, ref, watch } from "vue";
 import type { ScreenOption, SelectorBase, SelectorType } from "../screens";
 import {
   Wagon,
@@ -9,244 +9,180 @@ import {
   type SimpleStop,
 } from "../services/Wagon";
 
-defineProps<{
+const props = defineProps<{
   label: string;
   hint?: string;
   authorizedAgencies?: SelectorBase["authorizedAgencies"];
   selectorType: SelectorType;
   stopRoute: ScreenOption | undefined;
 }>();
-
 const emit = defineEmits<{
   (e: "update:stopRoutes", value: ScreenOption): void;
 }>();
-
-const searchTerms = ref<string>("");
+const searchTerms = ref("");
 const stops = ref<SimpleStop[]>([]);
-const stopModel = ref("");
-const stopRouteModel = ref("");
-const routesModel = ref<string[]>([]);
-const uuid = crypto.randomUUID();
 const isLoading = ref(false);
-const forbiddenError = ref(false);
-const colorScheme = usePreferredColorScheme();
+const error = ref<"forbidden" | "network" | null>(null);
+const searched = ref(false);
+const uuid = crypto.randomUUID();
+let searchVersion = 0;
 
+const visibleStops = computed(() =>
+  stops.value.filter(
+    (stop) =>
+      props.authorizedAgencies === "all" ||
+      props.authorizedAgencies?.includes(stop.id.split("_")[0]),
+  ),
+);
+
+watch(searchTerms, () => {
+  searchVersion++;
+  stops.value = [];
+  searched.value = false;
+  error.value = null;
+  isLoading.value = false;
+  emit("update:stopRoutes", {
+    stop: undefined,
+    routes: undefined,
+    value: undefined,
+  });
+});
 watchDebounced(
   searchTerms,
   async (value) => {
+    const version = searchVersion;
+    if (!value.trim()) return;
     isLoading.value = true;
-    forbiddenError.value = false;
     try {
-      stops.value = await Wagon.searchStops(value);
+      const results = await Wagon.searchStops(value.trim());
+      if (version === searchVersion) stops.value = results;
     } catch (e) {
-      if (e instanceof ForbiddenError) {
-        forbiddenError.value = true;
-      }
-      stops.value = [];
+      if (version === searchVersion)
+        error.value = e instanceof ForbiddenError ? "forbidden" : "network";
     } finally {
-      isLoading.value = false;
+      if (version === searchVersion) {
+        isLoading.value = false;
+        searched.value = true;
+      }
     }
   },
   { debounce: 400 },
 );
 
-function getStop(id: string): SimpleStop {
-  return stops.value.find((stop) => stop.id === id) as SimpleStop;
+function selectStop(stop: SimpleStop) {
+  emit("update:stopRoutes", { stop, routes: [], value: undefined });
 }
-
-function getRoute(id: string, stop: SimpleStop): SimpleLine {
-  return stop.lines.find((line) => line.id === id) as SimpleLine;
-}
-
-function lineModeSvgs(stop: SimpleStop): Set<string> {
-  return new Set(
-    stop.lines.map((line) => line.pictoSvg).filter((x) => x !== undefined),
-  );
-}
-
-function colorizeSvg(svg: string, darkColors: Record<string, string>): string {
-  if (colorScheme.value !== "dark") {
-    return svg;
+function selectLine(stop: SimpleStop, line: SimpleLine, checked: boolean) {
+  if (props.selectorType === "STOP_AND_ROUTE") {
+    emit("update:stopRoutes", { stop, routes: [line], value: undefined });
+    return;
   }
-  let result = svg;
-  for (const [color, darkColor] of Object.entries(darkColors)) {
-    const regex = new RegExp(color.replace("#", "#?"), "gi");
-    result = result.replace(regex, darkColor);
-  }
-  return result;
+  const current =
+    props.stopRoute?.stop?.id === stop.id ? (props.stopRoute.routes ?? []) : [];
+  const routes = checked
+    ? [...current, line]
+    : current.filter((item) => item.id !== line.id);
+  emit("update:stopRoutes", {
+    stop: routes.length ? stop : undefined,
+    routes,
+    value: undefined,
+  });
 }
-
-function linesByMode(lines: SimpleLine[]): {
-  picto: string;
-  lines: SimpleLine[];
-}[] {
+function linesByMode(lines: SimpleLine[]) {
   const modes = new Map<string, SimpleLine[]>();
-  const sortedLines = lines.sort((a, b) =>
+  for (const line of [...lines].sort((a, b) =>
     a.number.padStart(10, "0").localeCompare(b.number.padStart(10, "0")),
-  );
-
-  for (const line of sortedLines) {
-    const mode = line.pictoSvg;
-    if (mode === undefined) {
-      continue;
-    }
-    if (!modes.has(mode)) {
-      modes.set(mode, []);
-    }
-    modes.get(mode)?.push(line);
+  )) {
+    const mode = line.pictoSvg || "";
+    modes.set(mode, [...(modes.get(mode) ?? []), line]);
   }
-
-  return Array.from(modes.entries())
-    .sort(
-      (a, b) => (a[1].at(0)?.importance ?? 0) - (b[1].at(0)?.importance ?? 0),
-    )
-    .map(([picto, lines]) => ({
-      picto,
-      lines,
-    }));
+  return Array.from(modes.entries()).sort(
+    (a, b) => (a[1][0]?.importance ?? 0) - (b[1][0]?.importance ?? 0),
+  );
 }
-
-watch(
-  () => stopModel.value,
-  (value) => {
-    const stop = getStop(value);
-    emit("update:stopRoutes", { stop, routes: [], value: undefined });
-  },
-);
-
-watch(
-  () => stopRouteModel.value,
-  (value) => {
-    const [stopId, routeId] = value.split(" ");
-    const stop = getStop(stopId);
-    const route = getRoute(routeId, stop);
-    emit("update:stopRoutes", { stop, routes: [route], value: undefined });
-  },
-);
-
-watch(
-  () => routesModel.value,
-  (value) => {
-    const [stopId] = value.at(0)?.split(" ") || [];
-    const stop = getStop(stopId);
-    const routes = value.map((stopIdRouteId: string) => {
-      const [_, routeId] = stopIdRouteId.split(" ");
-      return getRoute(routeId, stop);
-    });
-    emit("update:stopRoutes", { stop, routes, value: undefined });
-  },
-);
 </script>
 
 <template>
-  <label>
-    <span :aria-busy="isLoading">{{ label }}</span>
-    <input type="text" v-model="searchTerms" spellcheck="false" />
-    <small v-if="hint"><br />{{ hint }}</small>
-  </label>
-  <p v-if="forbiddenError"><i>
-    Le service n'est disponible que dans les pays couverts par Wagon, dont la
-    France, le Canada et d'autres. Ceci peut aussi survenir lors de
-    l'utilisation d'un VPN.</i>
-  </p>
-  <ul>
-    <li
-      v-for="stop in stops.filter(
-        (stop) =>
-          authorizedAgencies === 'all' ||
-          authorizedAgencies?.includes(stop.id.split('_').at(0) || ''),
-      )"
+  <div class="station-search">
+    <label :for="uuid" class="field-label">{{ label }}</label>
+    <p v-if="hint" class="hint">{{ hint }}</p>
+    <input
+      :id="uuid"
+      v-model="searchTerms"
+      type="search"
+      placeholder="Rechercher une station ou un arrêt"
+      autocomplete="off"
+      spellcheck="false"
+    />
+    <p v-if="isLoading" class="search-status" role="status">
+      Recherche en cours…
+    </p>
+    <p v-else-if="error === 'forbidden'" class="search-error" role="alert">
+      La recherche n’est accessible que depuis certains pays, dont la France et
+      le Canada. Consultez <a href="https://getwagon.fr/">getwagon.fr</a> pour
+      connaître les villes prises en charge.
+    </p>
+    <p v-else-if="error === 'network'" class="search-error" role="alert">
+      La recherche est momentanément indisponible. Veuillez réessayer.
+    </p>
+    <p v-else-if="searched && !visibleStops.length" class="search-status">
+      Aucun arrêt trouvé.
+    </p>
+    <ul
+      v-if="visibleStops.length"
+      class="search-results"
+      :aria-label="`Résultats pour ${label}`"
     >
-      <label>
-        <input
-          v-if="selectorType === 'STOP'"
-          type="radio"
-          :name="uuid"
-          v-model="stopModel"
-          :value="stop.id"
-        />
-        <span>{{ stop.name }}</span>
-        <div
-          v-if="selectorType === 'STOP'"
-          class="modePicto"
-          v-for="mode in lineModeSvgs(stop)"
-          v-html="mode"
-        ></div>
-      </label>
-      <div
-        v-if="
-          selectorType === 'STOP_AND_ROUTE' ||
-          selectorType === 'STOP_AND_ROUTES'
-        "
-      >
-        <ul>
-          <li v-for="mode in linesByMode(stop.lines)" :key="mode.picto">
-            <div
-              class="modePictoRow"
-              v-html="
-                colorizeSvg(mode.picto, stop.lines.at(0)?.darkColors ?? {})
-              "
-            ></div>
-            <label class="picto" v-for="line in mode.lines" :key="line.id">
-              <div
+      <li v-for="stop in visibleStops" :key="stop.id" class="stop-result">
+        <label v-if="selectorType === 'STOP'" class="stop-label">
+          <input
+            type="radio"
+            :name="uuid"
+            :checked="stopRoute?.stop?.id === stop.id"
+            @change="selectStop(stop)"
+          />
+          {{ stop.name }}
+        </label>
+        <template v-else>
+          <p class="stop-name">{{ stop.name }}</p>
+          <div
+            v-for="[picto, lines] in linesByMode(stop.lines)"
+            :key="picto"
+            class="line-row"
+          >
+            <span
+              v-if="picto"
+              class="mode-picto"
+              aria-hidden="true"
+              v-html="picto"
+            ></span>
+            <label v-for="line in lines" :key="line.id" class="line-option">
+              <input
+                :type="selectorType === 'STOP_AND_ROUTE' ? 'radio' : 'checkbox'"
+                :name="uuid"
+                :checked="
+                  stopRoute?.stop?.id === stop.id &&
+                  !!stopRoute?.routes?.some((item) => item.id === line.id)
+                "
+                @change="
+                  selectLine(
+                    stop,
+                    line,
+                    ($event.target as HTMLInputElement).checked,
+                  )
+                "
+              />
+              <span
                 v-if="line.numberShapeSvg"
-                class="lineShape"
-                v-html="colorizeSvg(line.numberShapeSvg, line.darkColors)"
-              ></div>
-              <div v-else>
-                <span style="font-style: italic; color: grey">{{
-                  line.number
-                }}</span>
-              </div>
-              <input
-                v-if="selectorType === 'STOP_AND_ROUTE'"
-                type="radio"
-                :name="uuid"
-                :value="stop.id + ' ' + line.id"
-                v-model="stopRouteModel"
-              />
-              <input
-                v-if="selectorType === 'STOP_AND_ROUTES'"
-                type="checkbox"
-                :name="uuid"
-                :value="stop.id + ' ' + line.id"
-                v-model="routesModel"
-              />
+                class="line-shape"
+                :aria-label="`Ligne ${line.number}`"
+                v-html="line.numberShapeSvg"
+              ></span>
+              <span v-else>{{ line.number }}</span>
             </label>
-          </li>
-        </ul>
-      </div>
-    </li>
-  </ul>
+          </div>
+        </template>
+      </li>
+    </ul>
+  </div>
 </template>
-
-<style scoped>
-.lineShape {
-  height: 4vh;
-}
-
-.modePicto {
-  display: inline-block;
-  height: 2.6vh;
-  margin-left: 0.6vh;
-}
-
-.modePictoRow {
-  display: inline-block;
-  height: 4vh;
-  margin-right: 0.6vh;
-}
-
-.picto {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  margin-right: 1vh;
-  gap: 0.5vh;
-}
-
-input[type="radio"] {
-  margin-top: 0;
-  margin-inline-end: 0;
-}
-</style>

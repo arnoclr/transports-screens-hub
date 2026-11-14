@@ -21,11 +21,32 @@ export interface Position {
   long: number;
 }
 
-function processSVG(svg: string): string {
-  return svg
+function processSVG(svg: string, darkColors: Record<string, string>): string {
+  const replacements = new Map(
+    Object.entries(darkColors).map(([color, replacement]) => [
+      color.toLowerCase(),
+      replacement,
+    ]),
+  );
+  const colors = [...replacements.keys()]
+    .filter(Boolean)
+    .sort((a, b) => b.length - a.length)
+    .map((color) => color.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  let result = svg
     .replace(/width="[^"]+"/, "")
     .replace(/height="[^"]+"/, `height="100%"`)
-    .replace("bold", "normal");
+    .replace(/font-family="[^"]*"/g, 'font-family="Parisine, sans-serif"');
+  if (colors.length) {
+    const pattern = new RegExp(
+      `(?<![\\w#-])(?:${colors.join("|")})(?![\\w-])`,
+      "gi",
+    );
+    result = result.replace(
+      pattern,
+      (color) => replacements.get(color.toLowerCase()) ?? color,
+    );
+  }
+  return result;
 }
 
 export class ForbiddenError extends Error {
@@ -70,15 +91,16 @@ export class Wagon {
   }
 
   private static lineFromDTO(lineDto: any): SimpleLine {
+    const darkColors = lineDto.replacementColors?.dark ?? {};
     return {
       id: lineDto.id,
       number: lineDto.number,
       backgroundColor: lineDto.backgroundColor,
       textColor: lineDto.textColor,
-      pictoSvg: processSVG(lineDto.modeSvg ?? ""),
-      numberShapeSvg: processSVG(lineDto.numberShapeSvg ?? ""),
+      pictoSvg: processSVG(lineDto.modeSvg ?? "", darkColors),
+      numberShapeSvg: processSVG(lineDto.numberShapeSvg ?? "", darkColors),
       importance: lineDto.importance,
-      darkColors: lineDto.replacementColors?.dark ?? {},
+      darkColors,
     };
   }
 
@@ -97,6 +119,15 @@ export class Wagon {
     }
 
     if (!response.ok) {
+      throw new Error("Failed to search stations");
+    }
+
+    const contentType = response.headers.get("content-type") ?? "";
+    if (contentType.includes("text/html")) {
+      const html = await response.text();
+      if (/cloudflare|cf-chl-|challenge-platform/i.test(html)) {
+        throw new ForbiddenError();
+      }
       throw new Error("Failed to search stations");
     }
 
